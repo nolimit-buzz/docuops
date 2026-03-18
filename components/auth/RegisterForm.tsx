@@ -8,12 +8,6 @@ import { register } from "@/query/auth";
 import { AuthShell } from "./AuthShell";
 import { getErrorMessage, persistAuthSession } from "./auth-utils";
 
-const ROLE_OPTIONS = [
-  { label: "Admin", value: "Admin" },
-  { label: "Editor", value: "Editor" },
-  { label: "Reviewer", value: "Reviewer" },
-];
-
 export function RegisterForm() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -21,7 +15,7 @@ export function RegisterForm() {
     lastName: "",
     email: "",
     password: "",
-    role: ROLE_OPTIONS[0].value,
+    role: "user",
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -89,24 +83,6 @@ export function RegisterForm() {
           onChange={updateField("email")}
           required
         />
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
-            Role
-          </label>
-          <select
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-blue-500"
-            value={form.role}
-            onChange={updateField("role")}
-            required
-          >
-            {ROLE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
 
         <Input
           label="Password"

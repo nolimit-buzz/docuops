@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Organization, Document, Template, KnowledgeChunk, UserRole, DocStatus } from '../types';
+import { sessionHelper } from '@/lib/session';
 
 // Mock Data
 const MOCK_ORG: Organization = { id: 'org-1', name: 'Acme Corp', plan: 'Pro' };
@@ -119,9 +120,42 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
+function mapSessionUser(raw: Record<string, unknown>): User {
+  const firstName = typeof raw.firstName === 'string' ? raw.firstName : '';
+  const lastName = typeof raw.lastName === 'string' ? raw.lastName : '';
+  const name = typeof raw.name === 'string' && raw.name
+    ? raw.name
+    : [firstName, lastName].filter(Boolean).join(' ') || 'User';
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const roleStr = typeof raw.role === 'string' ? raw.role.toLowerCase() : '';
+  const role =
+    roleStr === 'admin' ? UserRole.ADMIN :
+    roleStr === 'editor' ? UserRole.EDITOR :
+    roleStr === 'reviewer' ? UserRole.REVIEWER :
+    UserRole.GUEST;
+
+  return {
+    id: (typeof raw._id === 'string' ? raw._id : null) ?? (typeof raw.id === 'string' ? raw.id : '') ,
+    name,
+    email: typeof raw.email === 'string' ? raw.email : '',
+    role,
+    avatar: typeof raw.avatar === 'string' && raw.avatar
+      ? raw.avatar
+      : `https://placehold.co/100x100?text=${initials}`,
+    organizationId: typeof raw.organizationId === 'string' ? raw.organizationId : '',
+  };
+}
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(MOCK_USER);
   const [organization] = useState<Organization>(MOCK_ORG);
+
+  useEffect(() => {
+    const sessionUser = sessionHelper.getUser();
+    if (sessionUser && typeof sessionUser === 'object') {
+      setUser(mapSessionUser(sessionUser as Record<string, unknown>));
+    }
+  }, []);
   const [documents, setDocuments] = useState<Document[]>(MOCK_DOCS);
   const [templates, setTemplates] = useState<Template[]>(MOCK_TEMPLATES);
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeChunk[]>(MOCK_KNOWLEDGE);
