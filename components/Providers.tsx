@@ -1,7 +1,23 @@
 "use client";
 
-import { StoreProvider } from "@/hooks/useStore";
+import { useEffect } from "react";
+import { useStore } from "@/hooks/useStore";
+
+function StoreHydrator() {
+  const initFromSession = useStore((s) => s.initFromSession);
+
+  useEffect(() => {
+    initFromSession();
+  }, [initFromSession]);
+
+  return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <StoreProvider>{children}</StoreProvider>;
+  return (
+    <>
+      <StoreHydrator />
+      {children}
+    </>
+  );
 }

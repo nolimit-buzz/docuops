@@ -2,31 +2,14 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { IntakeModal } from "../components/IntakeModal";
 import { Button, Card } from "../components/UIComponents";
 import { useStore } from "../hooks/useStore";
-
-const MOCK_STATS = [
-  { name: "Mon", docs: 4, tokens: 2400 },
-  { name: "Tue", docs: 7, tokens: 4500 },
-  { name: "Wed", docs: 5, tokens: 3200 },
-  { name: "Thu", docs: 12, tokens: 8900 },
-  { name: "Fri", docs: 9, tokens: 6700 },
-];
+import { DashboardStats } from "../components/dashboard/DashboardStats";
+import { DashboardCharts } from "../components/dashboard/DashboardCharts";
 
 export const Dashboard: React.FC = () => {
-  const { documents, templates } = useStore();
+  const { documents } = useStore();
   const router = useRouter();
   const [showIntake, setShowIntake] = useState(false);
 
@@ -42,131 +25,9 @@ export const Dashboard: React.FC = () => {
         <Button onClick={() => setShowIntake(true)}>+ New Document</Button>
       </header>
 
-      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-        <Card className="p-5">
-          <p className="text-sm font-medium uppercase text-slate-500">
-            Total Documents
-          </p>
-          <div className="mt-2 flex items-baseline">
-            <span className="text-3xl font-bold text-slate-900">
-              {documents.length}
-            </span>
-            <span className="ml-2 text-sm font-medium text-green-600">+12%</span>
-          </div>
-        </Card>
-        <Card className="p-5">
-          <p className="text-sm font-medium uppercase text-slate-500">
-            Active Templates
-          </p>
-          <div className="mt-2 flex items-baseline">
-            <span className="text-3xl font-bold text-slate-900">
-              {templates.length}
-            </span>
-          </div>
-        </Card>
-        <Card className="p-5">
-          <p className="text-sm font-medium uppercase text-slate-500">
-            AI Efficiency
-          </p>
-          <div className="mt-2 flex items-baseline">
-            <span className="text-3xl font-bold text-slate-900">85%</span>
-            <span className="ml-2 text-sm font-medium text-green-600">
-              Drafts used
-            </span>
-          </div>
-        </Card>
-        <Card className="p-5">
-          <p className="text-sm font-medium uppercase text-slate-500">
-            Tokens Saved
-          </p>
-          <div className="mt-2 flex items-baseline">
-            <span className="text-3xl font-bold text-slate-900">125k</span>
-            <span className="ml-2 text-sm text-slate-400">vs Manual</span>
-          </div>
-        </Card>
-      </div>
+      <DashboardStats />
 
-      <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <Card className="p-6">
-          <h3 className="mb-6 text-lg font-semibold text-slate-800">
-            Document Volume
-          </h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={MOCK_STATS}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  stroke="#94a3b8"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#94a3b8"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  cursor={{ fill: "#f1f5f9" }}
-                  contentStyle={{
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                />
-                <Bar
-                  dataKey="docs"
-                  fill="#3b82f6"
-                  radius={[4, 4, 0, 0]}
-                  barSize={32}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="mb-6 text-lg font-semibold text-slate-800">
-            Token Usage Trend
-          </h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={MOCK_STATS}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  stroke="#94a3b8"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#94a3b8"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="tokens"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
+      <DashboardCharts />
 
       <Card className="overflow-hidden">
         <div className="border-b border-slate-200 px-6 py-4">
