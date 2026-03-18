@@ -1,0 +1,4 @@
+{
+  "/api/proxy/[...path]/route": "app/api/proxy/[...path]/route.js",
+  "/(workspace)/dashboard/page": "app/(workspace)/dashboard/page.js"
+}
