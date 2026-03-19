@@ -413,10 +413,10 @@ export const DocumentEditor: React.FC = () => {
           <div className="p-6 border-b border-slate-100">
               <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Owner</h3>
               <div className="flex items-center gap-3">
-                  <img src="https://placehold.co/100x100?text=JD" className="w-12 h-12 rounded-full border border-slate-200 shadow-sm" alt="Owner" />
+                  <img src={user.avatar} className="w-12 h-12 rounded-full border border-slate-200 shadow-sm" alt={user.name} />
                   <div>
-                      <p className="font-bold text-slate-800">Jane Doe</p>
-                      <p className="text-xs text-slate-500 font-medium">Project Lead</p>
+                      <p className="font-bold text-slate-800">{user.name}</p>
+                      <p className="text-xs text-slate-500 font-medium capitalize">{user.role}</p>
                   </div>
               </div>
           </div>

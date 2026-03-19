@@ -106,13 +106,12 @@ export const StatusStepper: React.FC<{ status: DocStatus }> = ({ status }) => {
         return (
           <div key={step.id} className="relative z-10 flex items-start gap-4">
             <div
-              className={`mt-0.5 box-border h-5 w-5 flex-shrink-0 rounded-full border-[3px] transition-all duration-300 ${
-                isCurrent
-                  ? "border-blue-600 bg-white ring-4 ring-blue-50"
-                  : isCompleted
-                    ? "border-blue-600 bg-blue-600"
-                    : "border-slate-300 bg-white"
-              }`}
+              className={`mt-0.5 box-border h-5 w-5 flex-shrink-0 rounded-full border-[3px] transition-all duration-300 ${isCurrent
+                ? "border-blue-600 bg-white ring-4 ring-blue-50"
+                : isCompleted
+                  ? "border-blue-600 bg-blue-600"
+                  : "border-slate-300 bg-white"
+                }`}
             >
               {isCompleted && (
                 <div className="flex h-full w-full items-center justify-center text-white">
@@ -139,13 +138,12 @@ export const StatusStepper: React.FC<{ status: DocStatus }> = ({ status }) => {
             </div>
             <div>
               <p
-                className={`text-sm font-bold transition-colors ${
-                  isCurrent
-                    ? "text-blue-600"
-                    : isCompleted
-                      ? "text-slate-800"
-                      : "text-slate-400"
-                }`}
+                className={`text-sm font-bold transition-colors ${isCurrent
+                  ? "text-blue-600"
+                  : isCompleted
+                    ? "text-slate-800"
+                    : "text-slate-400"
+                  }`}
               >
                 {step.label}
               </p>
@@ -183,19 +181,17 @@ export const DocumentOutline: React.FC<{
                   className="group flex w-full items-center gap-4 text-left transition-colors"
                 >
                   <div
-                    className={`h-3 w-3 shrink-0 rounded-full ring-4 ring-white transition-all duration-300 ${
-                      isActive
-                        ? "scale-125 bg-blue-600 shadow-[0_0_0_2px_rgba(37,99,235,0.1)]"
-                        : "bg-slate-300 group-hover:bg-slate-400"
-                    }`}
+                    className={`h-3 w-3 shrink-0 rounded-full ring-4 ring-white transition-all duration-300 ${isActive
+                      ? "scale-125 bg-blue-600 shadow-[0_0_0_2px_rgba(37,99,235,0.1)]"
+                      : "bg-slate-300 group-hover:bg-slate-400"
+                      }`}
                   />
 
                   <span
-                    className={`truncate text-sm transition-colors ${
-                      isActive
-                        ? "font-bold text-blue-700"
-                        : "font-medium text-slate-500 group-hover:text-slate-800"
-                    }`}
+                    className={`truncate text-sm transition-colors ${isActive
+                      ? "font-bold text-blue-700"
+                      : "font-medium text-slate-500 group-hover:text-slate-800"
+                      }`}
                   >
                     <span className="mr-2 text-xs opacity-50">
                       {String(idx + 1).padStart(2, "0")}
@@ -280,9 +276,8 @@ export const SectionCard: React.FC<SectionCardProps> = ({
             disabled={isGenerating}
           >
             <svg
-              className={`mr-1.5 h-4 w-4 ${
-                isGenerating && isActive ? "animate-spin" : ""
-              }`}
+              className={`mr-1.5 h-4 w-4 ${isGenerating && isActive ? "animate-spin" : ""
+                }`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -300,11 +295,10 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       </div>
 
       <div
-        className={`relative overflow-hidden rounded-2xl border bg-white transition-all duration-300 ${
-          isActive
-            ? "border-blue-200 shadow-xl shadow-blue-900/5 ring-1 ring-blue-100"
-            : "border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md"
-        }`}
+        className={`relative overflow-hidden rounded-2xl border bg-white transition-all duration-300 ${isActive
+          ? "border-blue-200 shadow-xl shadow-blue-900/5 ring-1 ring-blue-100"
+          : "border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md"
+          }`}
       >
         <div className="p-1">
           <textarea
@@ -360,11 +354,10 @@ export const SectionCard: React.FC<SectionCardProps> = ({
                 <div className="relative flex rounded-lg border border-slate-100 bg-slate-50 p-1">
                   <button
                     onClick={() => onFeedback(section.id, "positive")}
-                    className={`rounded p-1.5 transition-all ${
-                      feedback?.rating === "positive"
-                        ? "bg-green-100 text-green-600"
-                        : "text-slate-400 hover:bg-green-50 hover:text-green-600"
-                    }`}
+                    className={`rounded p-1.5 transition-all ${feedback?.rating === "positive"
+                      ? "bg-green-100 text-green-600"
+                      : "text-slate-400 hover:bg-green-50 hover:text-green-600"
+                      }`}
                     title="Good generation"
                   >
                     <svg
@@ -384,11 +377,10 @@ export const SectionCard: React.FC<SectionCardProps> = ({
                   <div className="mx-1 my-1 w-px bg-slate-200" />
                   <button
                     onClick={() => onFeedback(section.id, "negative")}
-                    className={`rounded p-1.5 transition-all ${
-                      feedback?.rating === "negative"
-                        ? "bg-red-100 text-red-500"
-                        : "text-slate-400 hover:bg-red-50 hover:text-red-500"
-                    }`}
+                    className={`rounded p-1.5 transition-all ${feedback?.rating === "negative"
+                      ? "bg-red-100 text-red-500"
+                      : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                      }`}
                     title="Needs improvement"
                   >
                     <svg
@@ -469,16 +461,14 @@ export const SectionCard: React.FC<SectionCardProps> = ({
 
             <div className="group/magic relative flex-1">
               <div
-                className={`flex items-center rounded-full border bg-slate-50 transition-all duration-300 ${
-                  isActive
-                    ? "border-purple-300 bg-white shadow-[0_0_0_4px_rgba(168,85,247,0.05)]"
-                    : "border-slate-200 hover:border-purple-200 hover:bg-white"
-                }`}
+                className={`flex items-center rounded-full border bg-slate-50 transition-all duration-300 ${isActive
+                  ? "border-purple-300 bg-white shadow-[0_0_0_4px_rgba(168,85,247,0.05)]"
+                  : "border-slate-200 hover:border-purple-200 hover:bg-white"
+                  }`}
               >
                 <div
-                  className={`pl-4 pr-3 transition-colors ${
-                    isActive ? "text-purple-500" : "text-slate-400"
-                  }`}
+                  className={`pl-4 pr-3 transition-colors ${isActive ? "text-purple-500" : "text-slate-400"
+                    }`}
                 >
                   {isGenerating && isActive ? (
                     <svg
@@ -518,7 +508,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
                 </div>
                 <input
                   type="text"
-                  className="flex-1 border-none bg-transparent py-3 text-sm font-medium text-slate-700 placeholder-slate-400 focus:ring-0"
+                  className="flex-1 border-none bg-transparent py-3 text-sm font-medium text-slate-700 placeholder-slate-400 focus:ring-0 outline-none"
                   placeholder={
                     hasContent
                       ? "Tell AI to refine or expand..."

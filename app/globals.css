@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --font-heading: "Space Grotesk", sans-serif;
-  --font-body: "Source Sans 3", sans-serif;
+  --font-heading: var(--font-outfit), "Outfit", sans-serif;
+  --font-body: var(--font-outfit), "Outfit", sans-serif;
   --color-ink: #0f172a;
   --color-paper: #f8fafc;
 }

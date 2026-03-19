@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { DocStatus, Document, Template } from "../types";
 import { Button } from "./ui/Button";
 
@@ -37,9 +38,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     setTimeout(() => {
       alert(
         `Document signed successfully.\n\n` +
-          `System notification sent:\n` +
-          `- To Admin: Signature collected for "${localDoc.title}"\n` +
-          `- To Client: Copy of signed agreement attached.`,
+        `System notification sent:\n` +
+        `- To Admin: Signature collected for "${localDoc.title}"\n` +
+        `- To Client: Copy of signed agreement attached.`,
       );
     }, 500);
   };
@@ -91,21 +92,19 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             <div className="ml-4 flex rounded-lg bg-slate-800 p-1">
               <button
                 onClick={() => setViewMode("internal")}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
-                  viewMode === "internal"
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${viewMode === "internal"
                     ? "bg-slate-700 text-white shadow"
                     : "text-slate-400 hover:text-white"
-                }`}
+                  }`}
               >
                 Internal View
               </button>
               <button
                 onClick={() => setViewMode("client")}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
-                  viewMode === "client"
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${viewMode === "client"
                     ? "bg-slate-700 text-white shadow"
                     : "text-slate-400 hover:text-white"
-                }`}
+                  }`}
               >
                 Client View
               </button>
@@ -161,8 +160,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-1 justify-center overflow-y-auto bg-slate-900/50 p-8">
-        <div className="min-h-[1100px] w-full max-w-[850px] bg-white p-[60px] text-slate-900 shadow-2xl shadow-black/50 print:w-full print:p-0 print:shadow-none">
+      <div className="flex-1 overflow-y-auto bg-slate-900/50 p-8">
+        <div className="mx-auto w-full max-w-[850px] bg-white p-[60px] text-slate-900 shadow-2xl shadow-black/50 print:w-full print:p-0 print:shadow-none">
           <header className="mb-10 border-b border-slate-200 pb-8">
             <div className="flex items-start justify-between">
               <div>
@@ -194,11 +193,29 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                   <h3 className="mb-4 border-l-4 border-blue-600 pl-4 text-xl font-bold text-slate-800">
                     {index + 1}. {sectionDef?.title || "Section"}
                   </h3>
-                  <div className="whitespace-pre-wrap text-justify leading-relaxed text-slate-600">
-                    {section.content || (
-                      <span className="italic text-slate-300">
-                        No content generated yet.
-                      </span>
+                  <div className="text-justify leading-relaxed text-slate-600">
+                    {section.content ? (
+                      <ReactMarkdown
+                        components={{
+                          h1: ({ children }) => <h1 className="text-2xl font-bold text-slate-900 mt-6 mb-3">{children}</h1>,
+                          h2: ({ children }) => <h2 className="text-xl font-bold text-slate-800 mt-5 mb-2">{children}</h2>,
+                          h3: ({ children }) => <h3 className="text-lg font-semibold text-slate-800 mt-4 mb-2">{children}</h3>,
+                          h4: ({ children }) => <h4 className="text-base font-semibold text-slate-700 mt-3 mb-1">{children}</h4>,
+                          p: ({ children }) => <p className="mb-3 leading-relaxed">{children}</p>,
+                          strong: ({ children }) => <strong className="font-bold text-slate-800">{children}</strong>,
+                          em: ({ children }) => <em className="italic">{children}</em>,
+                          ul: ({ children }) => <ul className="list-disc pl-6 mb-3 space-y-1">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal pl-6 mb-3 space-y-1">{children}</ol>,
+                          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                          blockquote: ({ children }) => <blockquote className="border-l-4 border-slate-300 pl-4 italic text-slate-500 my-3">{children}</blockquote>,
+                          hr: () => <hr className="my-6 border-slate-200" />,
+                          code: ({ children }) => <code className="bg-slate-100 px-1.5 py-0.5 rounded text-sm font-mono text-slate-700">{children}</code>,
+                        }}
+                      >
+                        {section.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <span className="italic text-slate-300">No content generated yet.</span>
                     )}
                   </div>
 
@@ -269,7 +286,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                   <input
                     type="text"
                     autoFocus
-                    className="flex-1 rounded-lg border border-blue-200 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 rounded-lg border border-blue-200 px-4 py-3 outline-none"
                     placeholder="e.g. Jane Doe"
                     value={signature}
                     onChange={(event) => setSignature(event.target.value)}

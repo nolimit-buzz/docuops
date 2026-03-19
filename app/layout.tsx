@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
-const headingFont = Space_Grotesk({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-heading",
-});
-
-const bodyFont = Source_Sans_3({
-  subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-outfit",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${headingFont.variable} ${bodyFont.variable}`}>
+      <body className={outfit.variable}>
         <Providers>{children}</Providers>
       </body>
     </html>

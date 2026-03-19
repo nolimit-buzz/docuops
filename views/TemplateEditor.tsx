@@ -205,7 +205,7 @@ export const TemplateEditor: React.FC = () => {
                     onChange={(event) =>
                       updateSection(section.id, "required", event.target.checked)
                     }
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 outline-none"
                   />
                   <label
                     htmlFor={`req-${section.id}`}
