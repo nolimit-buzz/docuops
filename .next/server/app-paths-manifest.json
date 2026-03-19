@@ -1,5 +1,1 @@
-{
-  "/page": "app/page.js",
-  "/auth/register/page": "app/auth/register/page.js",
-  "/(workspace)/dashboard/page": "app/(workspace)/dashboard/page.js"
-}
+{}

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Badge, Button, Input } from "../components/UIComponents";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
 import { useStore } from "../hooks/useStore";
 import { KnowledgeChunk } from "../types";
 

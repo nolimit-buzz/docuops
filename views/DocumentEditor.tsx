@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '../hooks/useStore';
-import { Button, Badge } from '../components/UIComponents';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 import { DocumentOutline, SectionCard, SourceViewerModal, StatusStepper } from '../components/document-editor/DocumentEditorParts';
 import { generateSectionContent } from '../services/geminiService';
 import { DocStatus, Document, DocumentSectionFeedback, TemplateSection, KnowledgeChunk, Comment, UserRole } from '../types';

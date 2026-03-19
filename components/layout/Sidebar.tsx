@@ -13,6 +13,7 @@ export function Sidebar() {
 
   function handleLogout() {
     sessionHelper.clearSession();
+    useStore.persist.clearStorage();
     router.replace('/auth/login');
   }
 

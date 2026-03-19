@@ -3,7 +3,8 @@
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IntakeModal } from "../components/IntakeModal";
-import { Badge, Button } from "../components/UIComponents";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
 import { useStore } from "../hooks/useStore";
 import { DocStatus, Document } from "../types";
 

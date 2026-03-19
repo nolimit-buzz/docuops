@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { DocStatus, Document, Template } from "../types";
-import { Button } from "./UIComponents";
+import { Button } from "./ui/Button";
 
 interface DocumentPreviewModalProps {
   doc: Document;

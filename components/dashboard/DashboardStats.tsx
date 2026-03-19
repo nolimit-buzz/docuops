@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card } from "@/components/UIComponents";
+import { Card } from "@/components/ui/Card";
 import { getHistory } from "@/query/history";
 import { useStore } from "@/hooks/useStore";
 

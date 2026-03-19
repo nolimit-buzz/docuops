@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { User, Organization, Document, Template, KnowledgeChunk } from '../types';
 import { MOCK_USER, MOCK_ORG, MOCK_DOCS, MOCK_TEMPLATES, MOCK_KNOWLEDGE } from '../store/mockData';
 import { getSessionUser } from '../store/sessionUtils';
@@ -25,7 +26,7 @@ interface AppStore {
   addKnowledge: (chunk: KnowledgeChunk) => void;
 }
 
-export const useStore = create<AppStore>((set) => ({
+export const useStore = create<AppStore>()(persist((set) => ({
   user: MOCK_USER,
   organization: MOCK_ORG,
   documents: MOCK_DOCS,
@@ -47,4 +48,7 @@ export const useStore = create<AppStore>((set) => ({
   updateTemplate: (temp) => set((s) => ({ templates: s.templates.map((t) => (t.id === temp.id ? temp : t)) })),
 
   addKnowledge: (chunk) => set((s) => ({ knowledgeBase: [chunk, ...s.knowledgeBase] })),
+}), {
+  name: 'digicred-auth',
+  partialize: (s) => ({ user: s.user }),
 }));

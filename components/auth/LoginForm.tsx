@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { login } from "@/query/auth";
-import { Button, Input } from "@/components/UIComponents";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { AuthShell } from "./AuthShell";
 import { getErrorMessage, persistAuthSession } from "./auth-utils";
+import { useStore } from "@/hooks/useStore";
 
 export function LoginForm() {
   const router = useRouter();
@@ -23,6 +25,7 @@ export function LoginForm() {
     try {
       const response = await login(email, password);
       persistAuthSession(response);
+      useStore.getState().initFromSession();
       router.push("/dashboard");
     } catch (err) {
       setError(getErrorMessage(err));

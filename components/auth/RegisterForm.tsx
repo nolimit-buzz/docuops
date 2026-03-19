@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { Button, Input } from "@/components/UIComponents";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { register } from "@/query/auth";
 import { AuthShell } from "./AuthShell";
 import { getErrorMessage, persistAuthSession } from "./auth-utils";
+import { useStore } from "@/hooks/useStore";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -36,6 +38,7 @@ export function RegisterForm() {
     try {
       const response = await register(form);
       const persisted = persistAuthSession(response);
+      if (persisted) useStore.getState().initFromSession();
       router.push(persisted ? "/dashboard" : "/auth/login");
     } catch (err) {
       setError(getErrorMessage(err));

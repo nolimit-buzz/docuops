@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Input } from "../components/UIComponents";
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
 import { useStore } from "../hooks/useStore";
 import { Template } from "../types";
 

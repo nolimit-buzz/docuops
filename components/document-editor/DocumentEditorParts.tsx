@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button } from "../UIComponents";
+import { Button } from "../ui/Button";
 import {
   DocStatus,
   DocumentSectionContent,

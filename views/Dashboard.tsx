@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { IntakeModal } from "../components/IntakeModal";
-import { Button, Card } from "../components/UIComponents";
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
 import { useStore } from "../hooks/useStore";
 import { DashboardStats } from "../components/dashboard/DashboardStats";
 import { DashboardCharts } from "../components/dashboard/DashboardCharts";
 
-export const Dashboard: React.FC = () => {
+export function Dashboard() {
   const { documents } = useStore();
   const router = useRouter();
   const [showIntake, setShowIntake] = useState(false);

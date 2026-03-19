@@ -5,7 +5,7 @@ import {
   Bar, BarChart, CartesianGrid, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { Card } from "@/components/UIComponents";
+import { Card } from "@/components/ui/Card";
 import { getHistory } from "@/query/history";
 import { useStore } from "@/hooks/useStore";
 
