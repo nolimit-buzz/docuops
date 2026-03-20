@@ -67,10 +67,13 @@ export function DashboardCharts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
-    getHistory({ params: { userId } } as any)
+    if (!userId || userId === 'u-1') {
+      setLoading(false);
+      return;
+    }
+    getHistory({ params: { 'where[user][equals]': userId } } as any)
       .then((res: any) => {
-        const items = Array.isArray(res) ? res : (res?.data ?? []);
+        const items = Array.isArray(res) ? res : ((res as any)?.docs ?? (res as any)?.data ?? []);
         setData(toChartData(items));
       })
       .catch(() => setData(buildLast7Days()))

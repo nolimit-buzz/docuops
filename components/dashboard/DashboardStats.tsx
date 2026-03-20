@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { getHistory } from "@/query/history";
 import { useStore } from "@/hooks/useStore";
+import { DocStatus } from "@/types";
 
 interface StatCardProps {
   label: string;
@@ -34,18 +34,11 @@ function SkeletonCard() {
 }
 
 export function DashboardStats() {
-  const { templates } = useStore();
-  const [history, setHistory] = useState<any[]>([]);
+  const { documents, templates, loadDocuments } = useStore();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getHistory()
-      .then((res: any) => {
-        const items = Array.isArray(res) ? res : (res?.data ?? []);
-        setHistory(items);
-      })
-      .catch(() => setHistory([]))
-      .finally(() => setLoading(false));
+    loadDocuments().finally(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -56,23 +49,20 @@ export function DashboardStats() {
     );
   }
 
-  const total = history.length;
-  const aiGenerated = history.filter((d) => d?.isAiGenerated === true).length;
-  const submitted = history.filter((d) =>
-    ["submitted", "approved", "published"].includes(String(d?.status).toLowerCase())
-  ).length;
+  const inReview = documents.filter((d) => d.status === DocStatus.REVIEW).length;
+  const approved = documents.filter((d) => d.status === DocStatus.APPROVED).length;
 
   return (
     <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-      <StatCard label="Total Documents" value={total} sub="+12%" subColor="text-green-600" />
+      <StatCard label="Total Documents" value={documents.length} />
       <StatCard label="Active Templates" value={templates.length} />
       <StatCard
-        label="AI Generated"
-        value={aiGenerated}
-        sub={total > 0 ? `of ${total}` : undefined}
-        subColor="text-green-600"
+        label="In Review"
+        value={inReview}
+        sub={documents.length > 0 ? `of ${documents.length}` : undefined}
+        subColor="text-amber-600"
       />
-      <StatCard label="Submitted" value={submitted} sub="approved / published" />
+      <StatCard label="Approved" value={approved} subColor="text-green-600" />
     </div>
   );
 }

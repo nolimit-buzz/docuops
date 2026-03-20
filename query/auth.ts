@@ -10,4 +10,4 @@ export const register = (data: {
   firstName: string;
   lastName: string;
   role: string;
-}) => apiClient.post(ENDPOINTS.AUTH.REGISTER, data);
+}) => apiClient.post(ENDPOINTS.AUTH.REGISTER, { ...data, collection: 'users' });

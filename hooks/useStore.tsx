@@ -16,6 +16,8 @@ interface AppStore {
   setUser: (u: User) => void;
   initFromSession: () => void;
 
+  setDocuments: (docs: Document[]) => void;
+  loadDocuments: () => Promise<void>;
   addDocument: (doc: Document) => void;
   updateDocument: (doc: Document) => void;
   deleteDocument: (id: string) => void;
@@ -26,7 +28,7 @@ interface AppStore {
   addKnowledge: (chunk: KnowledgeChunk) => void;
 }
 
-export const useStore = create<AppStore>()(persist((set) => ({
+export const useStore = create<AppStore>()(persist((set, get) => ({
   user: MOCK_USER,
   organization: MOCK_ORG,
   documents: MOCK_DOCS,
@@ -38,6 +40,20 @@ export const useStore = create<AppStore>()(persist((set) => ({
   initFromSession: () => {
     const user = getSessionUser();
     if (user) set({ user });
+  },
+
+  setDocuments: (docs) => set({ documents: docs }),
+
+  loadDocuments: async () => {
+    const userId = get().user.id;
+    if (!userId || userId === 'u-1') return;
+    const { fetchUserDocuments } = await import('../query/documents');
+    try {
+      const docs = await fetchUserDocuments();
+      set({ documents: docs });
+    } catch (e) {
+      console.error('Failed to load documents:', e);
+    }
   },
 
   addDocument: (doc) => set((s) => ({ documents: [doc, ...s.documents] })),

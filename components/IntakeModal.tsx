@@ -44,7 +44,7 @@ export function IntakeModal({ onClose }: IntakeModalProps) {
         processSummary: processText,
       });
 
-      const docId = String(response?.id || response?._id || response?.data?.id || Date.now());
+      const docId = String(response?.doc?.id || response?.id || Date.now());
       const template = templates.find((t) => t.name.includes(docType)) || templates[0];
 
       addDocument({

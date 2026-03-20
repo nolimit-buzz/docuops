@@ -1,6 +1,7 @@
 {
-  "/page": "app/page.js",
+  "/api/generate-section/route": "app/api/generate-section/route.js",
   "/documents/[id]/page": "app/documents/[id]/page.js",
   "/(workspace)/dashboard/page": "app/(workspace)/dashboard/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
   "/(workspace)/documents/page": "app/(workspace)/documents/page.js"
 }

@@ -6,6 +6,16 @@ const HOP_BY_HOP_HEADERS = new Set([
   "content-length",
   "host",
   "transfer-encoding",
+  "origin",
+  "referer",
+  "cookie",
+  "accept-encoding",
+  "sec-fetch-dest",
+  "sec-fetch-mode",
+  "sec-fetch-site",
+  "sec-ch-ua",
+  "sec-ch-ua-mobile",
+  "sec-ch-ua-platform",
 ]);
 
 function buildUpstreamUrl(request: NextRequest, path: string[]) {
@@ -41,16 +51,25 @@ async function proxyRequest(
   const upstreamUrl = buildUpstreamUrl(request, path);
   const method = request.method.toUpperCase();
 
-  const response = await fetch(upstreamUrl, {
-    method,
-    headers: getForwardHeaders(request),
-    body: method === "GET" || method === "HEAD" ? undefined : await request.text(),
-    redirect: "manual",
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(upstreamUrl, {
+      method,
+      headers: getForwardHeaders(request),
+      body: method === "GET" || method === "HEAD" ? undefined : await request.text(),
+      redirect: "manual",
+      cache: "no-store",
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Upstream request failed", detail: String(err) },
+      { status: 502 },
+    );
+  }
 
   const responseHeaders = new Headers(response.headers);
   HOP_BY_HOP_HEADERS.forEach((header) => responseHeaders.delete(header));
+  responseHeaders.delete("content-encoding");
 
   return new NextResponse(response.body, {
     status: response.status,

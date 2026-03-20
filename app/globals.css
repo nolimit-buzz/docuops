@@ -83,12 +83,22 @@ select {
 }
 
 @media print {
-  .no-print {
-    display: none !important;
+  body * {
+    visibility: hidden;
   }
 
-  .print-only {
-    background: white !important;
+  #print-document-content,
+  #print-document-content * {
+    visibility: visible;
+  }
+
+  #print-document-content {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 48px 60px;
+    box-shadow: none;
+    background: white;
   }
 }
 

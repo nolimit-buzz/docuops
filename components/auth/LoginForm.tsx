@@ -26,6 +26,7 @@ export function LoginForm() {
       const response = await login(email, password);
       persistAuthSession(response);
       useStore.getState().initFromSession();
+      useStore.getState().loadDocuments();
       router.push("/dashboard");
     } catch (err) {
       setError(getErrorMessage(err));

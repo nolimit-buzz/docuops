@@ -43,10 +43,10 @@ export function normalizeAuthResponse(payload: unknown) {
 export function persistAuthSession(payload: unknown) {
   const session = normalizeAuthResponse(payload);
 
-  if (session.accessToken && session.refreshToken && session.user) {
+  if (session.accessToken && session.user) {
     sessionHelper.setSession(
       session.accessToken,
-      session.refreshToken,
+      session.refreshToken ?? '',
       session.user,
     );
     return true;
@@ -60,7 +60,11 @@ export function getErrorMessage(error: unknown) {
   const response = asRecord(axiosError?.response);
   const data = asRecord(response?.data);
 
+  const errorsArray = Array.isArray(data?.errors) ? data.errors : null;
+  const firstError = errorsArray ? asRecord(errorsArray[0]) : null;
+
   return (
+    getString(firstError?.message) ??
     getString(data?.message) ??
     getString(data?.error) ??
     getString(axiosError?.message) ??

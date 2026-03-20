@@ -26,7 +26,49 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const [signature, setSignature] = useState("");
 
   const handlePrint = () => {
-    window.print();
+    const content = document.getElementById("print-document-content");
+    if (!content) return;
+
+    const html = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>${localDoc.title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Outfit', sans-serif; padding: 60px; color: #0f172a; font-size: 15px; line-height: 1.7; }
+      h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+      h2 { font-size: 22px; font-weight: 700; margin: 28px 0 10px; }
+      h3 { font-size: 18px; font-weight: 600; margin: 24px 0 10px; border-left: 4px solid #2563eb; padding-left: 16px; color: #1e293b; }
+      h4 { font-size: 15px; font-weight: 600; margin: 18px 0 6px; }
+      p { margin-bottom: 12px; text-align: justify; }
+      strong { font-weight: 700; }
+      em { font-style: italic; }
+      ul { list-style: disc; padding-left: 28px; margin-bottom: 12px; }
+      ol { list-style: decimal; padding-left: 28px; margin-bottom: 12px; }
+      li { margin-bottom: 6px; }
+      hr { border: none; border-top: 1px solid #e2e8f0; margin: 28px 0; }
+      blockquote { border-left: 4px solid #cbd5e1; padding-left: 16px; color: #64748b; font-style: italic; margin: 16px 0; }
+      code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: monospace; }
+      header { border-bottom: 1px solid #e2e8f0; padding-bottom: 28px; margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-start; }
+      .space-y-10 > div { margin-bottom: 40px; }
+    </style>
+  </head>
+  <body>${content.innerHTML}</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, "_blank");
+    if (!printWindow) { URL.revokeObjectURL(url); return; }
+
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+      URL.revokeObjectURL(url);
+    }, 500);
   };
 
   const handleSign = () => {
@@ -53,7 +95,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-slate-900/95 backdrop-blur-md print-only animate-in fade-in duration-300"
+      className="fixed inset-0 z-[100] flex flex-col bg-slate-900/95 backdrop-blur-md animate-in fade-in duration-300"
       style={{ fontFamily: '"Outfit", sans-serif' }}
     >
       <div className="no-print z-50 flex shrink-0 items-center justify-between border-b border-white/10 bg-slate-900/50 px-6 py-4">
@@ -161,7 +203,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto bg-slate-900/50 p-8">
-        <div className="mx-auto w-full max-w-[850px] bg-white p-[60px] text-slate-900 shadow-2xl shadow-black/50 print:w-full print:p-0 print:shadow-none">
+        <div id="print-document-content" className="mx-auto w-full max-w-[850px] bg-white p-[60px] text-slate-900 shadow-2xl shadow-black/50">
           <header className="mb-10 border-b border-slate-200 pb-8">
             <div className="flex items-start justify-between">
               <div>
