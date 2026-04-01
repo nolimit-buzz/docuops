@@ -1,12 +1,12 @@
 export const ENDPOINTS = {
   AUTH: {
-    LOGIN: '/users/login',
-    LOGOUT: '/users/logout',
-    REGISTER: '/users',
-    ME: '/users/me',
-    REFRESH_TOKEN: '/users/refresh-token',
-    FORGOT_PASSWORD: '/users/forgot-password',
-    RESET_PASSWORD: '/users/reset-password',
+    LOGIN: '/auth/login',
+    LOGOUT: '/auth/logout',
+    REGISTER: '/auth/register',
+    ME: '/auth/me',
+    REFRESH_TOKEN: '/auth/refresh-token',
+    FORGOT_PASSWORD: '/auth/forgot-password',
+    RESET_PASSWORD: '/auth/reset-password',
   },
   ADMINS: {
     LIST: '/admins',

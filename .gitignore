@@ -30,3 +30,6 @@ dist-ssr
 .yarnrc.yml
 .claude
 .claudeignore
+
+yarn.lock
+package-lock.json

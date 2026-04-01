@@ -286,7 +286,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                 </p>
                 <div className="mb-2 flex h-12 items-end border-b-2 border-slate-300">
                   {localDoc.status === DocStatus.APPROVED && (
-                    <span className="-mb-2 block px-2 text-3xl italic text-blue-900 [transform:rotate(-2deg)]">
+                    <span className="-mb-2 block px-2 text-3xl italic text-blue-900 transform-[rotate(-2deg)]">
                       {signature || "Jane Doe"}
                     </span>
                   )}

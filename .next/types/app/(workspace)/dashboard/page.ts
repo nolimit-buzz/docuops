@@ -1,4 +1,4 @@
-// File: C:\Users\syntax\Documents\projects\remix_-digicred-v9\app\(workspace)\dashboard\page.tsx
+// File: C:\Users\Syntax\Documents\Projects\docuops\app\(workspace)\dashboard\page.tsx
 import * as entry from '../../../../../app/(workspace)/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

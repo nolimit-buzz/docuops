@@ -395,7 +395,7 @@ export const DocumentEditor: React.FC = () => {
           {/* 1. Review and Approve Button */}
           <div className="p-6 border-b border-slate-100">
               <Button 
-                className="w-full h-12 text-base font-bold shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5" 
+                className="w-full h-12 text-base font-bold shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5"
                 onClick={() => setPreviewMode('client')}
               >
                   {doc.status === DocStatus.APPROVED ? 'View Signed Document' : 'Review & Approve'}

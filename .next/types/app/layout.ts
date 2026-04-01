@@ -1,4 +1,4 @@
-// File: C:\Users\syntax\Documents\projects\remix_-digicred-v9\app\layout.tsx
+// File: C:\Users\Syntax\Documents\Projects\docuops\app\layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

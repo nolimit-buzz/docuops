@@ -1,13 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { sessionHelper } from '../session';
 
-const resolveBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    return '/api/proxy';
-  }
-
-  return process.env.NEXT_PUBLIC_API_URL || '';
-};
+const resolveBaseUrl = () => process.env.NEXT_PUBLIC_API_URL || '';
 
 class ApiClient {
   private instance: AxiosInstance;
