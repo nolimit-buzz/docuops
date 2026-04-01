@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { useStore } from "@/hooks/useStore";
-import { DocStatus } from "@/types";
+import { getHistory } from "@/query/history";
 
 interface StatCardProps {
   label: string;
@@ -33,12 +33,28 @@ function SkeletonCard() {
   );
 }
 
+interface HistoryStats {
+  totalDocs: number;
+  inReview: number;
+  approved: number;
+}
+
 export function DashboardStats() {
-  const { documents, templates, loadDocuments } = useStore();
+  const { templates } = useStore();
+  const [stats, setStats] = useState<HistoryStats>({ totalDocs: 0, inReview: 0, approved: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadDocuments().finally(() => setLoading(false));
+    getHistory({ params: { limit: 1000 } } as any)
+      .then((res: any) => {
+        const docs: any[] = Array.isArray(res) ? res : (res?.docs ?? res?.data ?? []);
+        const totalDocs: number = res?.totalDocs ?? docs.length;
+        const inReview = docs.filter((d) => d?.status === "review" || d?.status === "Review").length;
+        const approved = docs.filter((d) => d?.status === "approved" || d?.status === "Approved").length;
+        setStats({ totalDocs, inReview, approved });
+      })
+      .catch(() => setStats({ totalDocs: 0, inReview: 0, approved: 0 }))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -49,20 +65,17 @@ export function DashboardStats() {
     );
   }
 
-  const inReview = documents.filter((d) => d.status === DocStatus.REVIEW).length;
-  const approved = documents.filter((d) => d.status === DocStatus.APPROVED).length;
-
   return (
     <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-      <StatCard label="Total Documents" value={documents.length} />
+      <StatCard label="Total Documents" value={stats.totalDocs} />
       <StatCard label="Active Templates" value={templates.length} />
       <StatCard
         label="In Review"
-        value={inReview}
-        sub={documents.length > 0 ? `of ${documents.length}` : undefined}
+        value={stats.inReview}
+        sub={stats.totalDocs > 0 ? `of ${stats.totalDocs}` : undefined}
         subColor="text-amber-600"
       />
-      <StatCard label="Approved" value={approved} subColor="text-green-600" />
+      <StatCard label="Approved" value={stats.approved} subColor="text-green-600" />
     </div>
   );
 }
