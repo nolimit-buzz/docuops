@@ -20,6 +20,23 @@ export async function login(email: string, password: string) {
     throw new Error(message);
   }
 
+  // Login response shape: { data: { accessToken, ... } }
+  const accessToken: string | undefined =
+    data?.data?.accessToken ?? data?.accessToken;
+
+  try {
+    const infoRes = await fetch(`${API_URL}${ENDPOINTS.AUTH.USER_INFO}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+      cache: 'no-store',
+    });
+    if (infoRes.ok) {
+      const company = await infoRes.json();
+      return { ...data, company };
+    }
+  } catch {
+    // /userinfo failure must never block login
+  }
+
   return data;
 }
 

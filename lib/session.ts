@@ -12,6 +12,7 @@ export const SESSION_KEYS = {
   REFRESH_TOKEN: 'refreshToken',
   USER: 'user',
   USER_ID: 'userId',
+  COMPANY: 'company',
 };
 
 /**
@@ -135,6 +136,21 @@ export const sessionHelper = {
     sessionStorage.removeItem(SESSION_KEYS.REFRESH_TOKEN);
     sessionStorage.removeItem(SESSION_KEYS.USER);
     sessionStorage.removeItem(SESSION_KEYS.USER_ID);
+    sessionStorage.removeItem(SESSION_KEYS.COMPANY);
+  },
+
+  setCompany: (data: any) => {
+    sessionHelper.setItem(SESSION_KEYS.COMPANY, JSON.stringify(data));
+  },
+
+  getCompany: (): any | null => {
+    const raw = sessionHelper.getItem(SESSION_KEYS.COMPANY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
   },
 
   /**

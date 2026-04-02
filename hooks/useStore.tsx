@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, Organization, Document, Template, KnowledgeChunk } from '../types';
 import { MOCK_USER, MOCK_ORG, MOCK_DOCS, MOCK_TEMPLATES, MOCK_KNOWLEDGE } from '../store/mockData';
-import { getSessionUser } from '../store/sessionUtils';
+import { getSessionUser, getSessionOrganization } from '../store/sessionUtils';
 
 interface AppStore {
   user: User;
@@ -39,7 +39,9 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
 
   initFromSession: () => {
     const user = getSessionUser();
+    const org = getSessionOrganization();
     if (user) set({ user });
+    if (org) set({ organization: org });
   },
 
   setDocuments: (docs) => set({ documents: docs }),
