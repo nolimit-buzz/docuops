@@ -11,12 +11,14 @@ import { SelectGroup } from "./intake/SelectGroup";
 import { SowIcon, BriefIcon, ProposalIcon } from "./intake/icons";
 import { createDocument } from "../query/documents";
 
+const ICONS = [<SowIcon key="sow" />, <BriefIcon key="brief" />, <ProposalIcon key="proposal" />];
+
 interface IntakeModalProps {
   onClose: () => void;
 }
 
 export function IntakeModal({ onClose }: IntakeModalProps) {
-  const { addDocument, templates, user } = useStore();
+  const { addDocument, templates, user, paperTypes } = useStore();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [docType, setDocType] = useState<string | null>(null);
@@ -98,27 +100,22 @@ export function IntakeModal({ onClose }: IntakeModalProps) {
         <div className="p-8 overflow-y-auto min-h-[400px]">
           {step === 1 ? (
             <div className="grid grid-cols-1 gap-4">
-              <DocTypeOption
-                selected={docType === "SOW"}
-                onClick={() => setDocType("SOW")}
-                title="Statement of Work (SOW)"
-                description="Formal document defining project scope, timeline, and deliverables."
-                icon={<SowIcon />}
-              />
-              <DocTypeOption
-                selected={docType === "Project Brief"}
-                onClick={() => setDocType("Project Brief")}
-                title="Project Brief"
-                description="High-level overview of goals and requirements."
-                icon={<BriefIcon />}
-              />
-              <DocTypeOption
-                selected={docType === "Proposal"}
-                onClick={() => setDocType("Proposal")}
-                title="Commercial Proposal"
-                description="Pitch document including pricing and value proposition."
-                icon={<ProposalIcon />}
-              />
+              {paperTypes.length > 0 ? (
+                paperTypes.map((type, idx) => (
+                  <DocTypeOption
+                    key={type.id}
+                    selected={docType === type.name}
+                    onClick={() => setDocType(type.name)}
+                    title={type.name}
+                    description={type.description}
+                    icon={ICONS[idx % ICONS.length]}
+                  />
+                ))
+              ) : (
+                <p className="py-8 text-center text-sm text-slate-400">
+                  No document types available.
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
@@ -174,9 +171,9 @@ export function IntakeModal({ onClose }: IntakeModalProps) {
                       Process Governance Match
                     </p>
                     <p className="text-sm text-indigo-900 leading-relaxed">
-                      "Since this is a <strong>{category}</strong> project for{" "}
+                      &quot;Since this is a <strong>{category}</strong> project for{" "}
                       <strong>{clientName}</strong>, our{" "}
-                      <strong>{timeline}</strong> execution protocol applies."
+                      <strong>{timeline}</strong> execution protocol applies.&quot;
                     </p>
                   </div>
                 </div>

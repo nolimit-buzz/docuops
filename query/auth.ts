@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { ENDPOINTS } from '@/lib/sdk/endpoints';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -24,6 +25,15 @@ export async function login(email: string, password: string) {
   const accessToken: string | undefined =
     data?.data?.accessToken ?? data?.accessToken;
 
+  if (accessToken) {
+    (await cookies()).set('accessToken', accessToken, {
+      httpOnly: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 20,
+    });
+  }
+
   try {
     const infoRes = await fetch(`${API_URL}${ENDPOINTS.AUTH.USER_INFO}`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
@@ -38,6 +48,10 @@ export async function login(email: string, password: string) {
   }
 
   return data;
+}
+
+export async function logout() {
+  (await cookies()).delete('accessToken');
 }
 
 export async function register(data: {

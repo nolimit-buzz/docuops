@@ -27,6 +27,7 @@ export function LoginForm() {
       persistAuthSession(response);
       useStore.getState().initFromSession();
       useStore.getState().loadDocuments();
+      useStore.getState().loadPaperTypes();
       router.push("/dashboard");
     } catch (err) {
       setError(getErrorMessage(err));

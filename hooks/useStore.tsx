@@ -5,6 +5,7 @@ import { persist } from 'zustand/middleware';
 import { User, Organization, Document, Template, KnowledgeChunk } from '../types';
 import { MOCK_USER, MOCK_ORG, MOCK_DOCS, MOCK_TEMPLATES, MOCK_KNOWLEDGE } from '../store/mockData';
 import { getSessionUser, getSessionOrganization } from '../store/sessionUtils';
+import type { PaperType } from '../query/paperTypes';
 
 interface AppStore {
   user: User;
@@ -12,6 +13,7 @@ interface AppStore {
   documents: Document[];
   templates: Template[];
   knowledgeBase: KnowledgeChunk[];
+  paperTypes: PaperType[];
 
   setUser: (u: User) => void;
   initFromSession: () => void;
@@ -26,6 +28,8 @@ interface AppStore {
   updateTemplate: (temp: Template) => void;
 
   addKnowledge: (chunk: KnowledgeChunk) => void;
+
+  loadPaperTypes: () => Promise<void>;
 }
 
 export const useStore = create<AppStore>()(persist((set, get) => ({
@@ -34,6 +38,7 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
   documents: MOCK_DOCS,
   templates: MOCK_TEMPLATES,
   knowledgeBase: MOCK_KNOWLEDGE,
+  paperTypes: [],
 
   setUser: (u) => set({ user: u }),
 
@@ -66,6 +71,16 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
   updateTemplate: (temp) => set((s) => ({ templates: s.templates.map((t) => (t.id === temp.id ? temp : t)) })),
 
   addKnowledge: (chunk) => set((s) => ({ knowledgeBase: [chunk, ...s.knowledgeBase] })),
+
+  loadPaperTypes: async () => {
+    const { getPaperTypes } = await import('../query/paperTypes');
+    try {
+      const types = await getPaperTypes();
+      if (types.length > 0) set({ paperTypes: types });
+    } catch (e) {
+      console.error('Failed to load paper types:', e);
+    }
+  },
 }), {
   name: 'digicred-auth',
   partialize: (s) => ({ user: s.user }),

@@ -1,38 +1,46 @@
-import apiClient from '@/lib/sdk/api-client';
+'use server';
+
+import { apiJson } from '@/lib/query-helpers';
 import { ENDPOINTS } from '@/lib/sdk/endpoints';
 import { Document, DocStatus } from '../types';
 
 const resolveEndpoint = (id: string, type: string) =>
   type === 'MarketReport' ? ENDPOINTS.MARKET_REPORTS.GET(id) : ENDPOINTS.NBC_PAPERS.GET(id);
 
-export const createDocument = (
+export const createDocument = async (
   docType: string,
   data: { clientName: string; category: string; budget: string; timeline: string; processSummary: string }
 ) => {
   if (docType === 'Proposal') {
-    return apiClient.post(ENDPOINTS.MARKET_REPORTS.CREATE, {
-      countryName: data.clientName,
-      year: String(new Date().getFullYear()),
+    return apiJson(ENDPOINTS.MARKET_REPORTS.CREATE, {
+      method: 'POST',
+      body: JSON.stringify({
+        countryName: data.clientName,
+        year: String(new Date().getFullYear()),
+      }),
     });
   }
 
-  return apiClient.post(ENDPOINTS.NBC_PAPERS.CREATE, {
-    companyName: data.clientName,
-    transactionType: data.category,
-    structuringLeads: [],
-    sponsors: [],
-    projectDetails: {
-      location: data.timeline,
-      sdgGoals: data.budget,
-    },
+  return apiJson(ENDPOINTS.NBC_PAPERS.CREATE, {
+    method: 'POST',
+    body: JSON.stringify({
+      companyName: data.clientName,
+      transactionType: data.category,
+      structuringLeads: [],
+      sponsors: [],
+      projectDetails: {
+        location: data.timeline,
+        sdgGoals: data.budget,
+      },
+    }),
   });
 };
 
-export const deleteDocument = (id: string, type: string) =>
-  apiClient.delete(resolveEndpoint(id, type));
+export const deleteDocument = async (id: string, type: string) =>
+  apiJson(resolveEndpoint(id, type), { method: 'DELETE' });
 
-export const updateDocument = (id: string, type: string, data: any) =>
-  apiClient.put(resolveEndpoint(id, type), data);
+export const updateDocument = async (id: string, type: string, data: any) =>
+  apiJson(resolveEndpoint(id, type), { method: 'PUT', body: JSON.stringify(data) });
 
 function mapNbcPaperToDocument(paper: any): Document {
   return {
@@ -78,8 +86,8 @@ function mapMarketReportToDocument(report: any): Document {
 
 export const fetchUserDocuments = async (): Promise<Document[]> => {
   const [nbcResult, mrResult] = await Promise.allSettled([
-    apiClient.get<{ docs: any[] }>(ENDPOINTS.NBC_PAPERS.LIST),
-    apiClient.get<{ docs: any[] }>(ENDPOINTS.MARKET_REPORTS.LIST),
+    apiJson<{ docs: any[] }>(ENDPOINTS.NBC_PAPERS.LIST),
+    apiJson<{ docs: any[] }>(ENDPOINTS.MARKET_REPORTS.LIST),
   ]);
 
   const docs: Document[] = [];

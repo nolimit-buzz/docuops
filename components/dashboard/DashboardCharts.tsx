@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   Bar, BarChart, CartesianGrid, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { Card } from "@/components/ui/Card";
-import { getHistory } from "@/query/history";
-import { useStore } from "@/hooks/useStore";
-
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+import type { CompanyStats } from "@/query/stats";
 
 interface ChartPoint {
   name: string;
@@ -17,30 +13,12 @@ interface ChartPoint {
   tokens: number;
 }
 
-function buildLast7Days(): ChartPoint[] {
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return { name: DAY_LABELS[d.getDay()], docs: 0, tokens: 0 };
-  });
-}
-
-function toChartData(items: any[]): ChartPoint[] {
-  const points = buildLast7Days();
-  const today = new Date();
-
-  for (const item of items) {
-    const raw = item?.createdAt ?? item?.updatedAt ?? item?.date;
-    if (!raw) continue;
-    const date = new Date(raw);
-    const daysAgo = Math.floor((today.getTime() - date.getTime()) / 86_400_000);
-    if (daysAgo < 0 || daysAgo > 6) continue;
-    const idx = 6 - daysAgo;
-    points[idx].docs += 1;
-    points[idx].tokens += Number(item?.tokenCount ?? item?.tokens ?? 0);
-  }
-
-  return points;
+function toChartPoints(chartData: CompanyStats["chartData"]): ChartPoint[] {
+  return chartData.map((item) => ({
+    name: new Date(item.date).toLocaleDateString("en", { weekday: "short" }),
+    docs: item.docs,
+    tokens: item.tokens,
+  }));
 }
 
 const AXIS_STYLE = { stroke: "#94a3b8", fontSize: 12 };
@@ -61,26 +39,15 @@ function ChartSkeleton() {
   );
 }
 
-export function DashboardCharts() {
-  const userId = useStore((s) => s.user.id);
-  const [data, setData] = useState<ChartPoint[]>([]);
-  const [loading, setLoading] = useState(true);
+interface DashboardChartsProps {
+  chartData: CompanyStats["chartData"] | null;
+  loading: boolean;
+}
 
-  useEffect(() => {
-    if (!userId || userId === 'u-1') {
-      setLoading(false);
-      return;
-    }
-    getHistory({ params: { 'where[user][equals]': userId } } as any)
-      .then((res: any) => {
-        const items = Array.isArray(res) ? res : ((res as any)?.docs ?? (res as any)?.data ?? []);
-        setData(toChartData(items));
-      })
-      .catch(() => setData(buildLast7Days()))
-      .finally(() => setLoading(false));
-  }, [userId]);
-
+export function DashboardCharts({ chartData, loading }: DashboardChartsProps) {
   if (loading) return <ChartSkeleton />;
+
+  const data = chartData ? toChartPoints(chartData) : [];
 
   return (
     <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">

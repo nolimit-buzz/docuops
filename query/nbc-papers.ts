@@ -1,7 +1,9 @@
-import apiClient from '@/lib/sdk/api-client';
+'use server';
+
+import { apiJson } from '@/lib/query-helpers';
 import { ENDPOINTS } from '@/lib/sdk/endpoints';
 
-export const createNbcPaper = (data: {
+export const createNbcPaper = async (data: {
   structuringLeads: string[];
   companyName: string;
   transactionType: string;
@@ -12,32 +14,39 @@ export const createNbcPaper = (data: {
     debtNeed?: number;
     sdgGoals?: string;
   };
-}) => apiClient.post(ENDPOINTS.NBC_PAPERS.CREATE, data);
+}) => apiJson(ENDPOINTS.NBC_PAPERS.CREATE, { method: 'POST', body: JSON.stringify(data) });
 
-export const getNbcPaper = (id: string) =>
-  apiClient.get(ENDPOINTS.NBC_PAPERS.GET(id));
+export const getNbcPaper = async (id: string) =>
+  apiJson(ENDPOINTS.NBC_PAPERS.GET(id));
 
-export const updateNbcPaper = (id: string, data: any) =>
-  apiClient.put(ENDPOINTS.NBC_PAPERS.UPDATE(id), data);
+export const updateNbcPaper = async (id: string, data: any) =>
+  apiJson(ENDPOINTS.NBC_PAPERS.UPDATE(id), { method: 'PUT', body: JSON.stringify(data) });
 
-export const deleteNbcPaper = (id: string) =>
-  apiClient.delete(ENDPOINTS.NBC_PAPERS.DELETE(id));
+export const deleteNbcPaper = async (id: string) =>
+  apiJson(ENDPOINTS.NBC_PAPERS.DELETE(id), { method: 'DELETE' });
 
-export const submitNbcPaper = (id: string, data?: any) =>
-  apiClient.put(ENDPOINTS.NBC_PAPERS.SUBMIT(id), data);
+export const submitNbcPaper = async (id: string, data?: any) =>
+  apiJson(ENDPOINTS.NBC_PAPERS.SUBMIT(id), { method: 'PUT', body: JSON.stringify(data ?? {}) });
 
-export const updateNbcPaperSection = (id: string, key: string, data: any) =>
-  apiClient.put(ENDPOINTS.NBC_PAPERS.UPDATE_SECTION(id, key), data);
+export const updateNbcPaperSection = async (id: string, key: string, data: any) =>
+  apiJson(ENDPOINTS.NBC_PAPERS.UPDATE_SECTION(id, key), { method: 'PUT', body: JSON.stringify(data) });
 
-export const updateNbcPaperSubsection = (
+export const updateNbcPaperSubsection = async (
   id: string,
   sectionKey: string,
   subsectionKey: string,
   data: any
-) => apiClient.put(ENDPOINTS.NBC_PAPERS.UPDATE_SUBSECTION(id, sectionKey, subsectionKey), data);
+) =>
+  apiJson(ENDPOINTS.NBC_PAPERS.UPDATE_SUBSECTION(id, sectionKey, subsectionKey), {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
 
-export const regenerateNbcPaper = (id: string, data?: any) =>
-  apiClient.post(ENDPOINTS.NBC_PAPERS.REGENERATE(id), data);
+export const regenerateNbcPaper = async (id: string, data?: any) =>
+  apiJson(ENDPOINTS.NBC_PAPERS.REGENERATE(id), { method: 'POST', body: JSON.stringify(data ?? {}) });
 
-export const regenerateNbcPaperSubsection = (id: string, data?: any) =>
-  apiClient.post(ENDPOINTS.NBC_PAPERS.REGENERATE_SUBSECTION(id), data);
+export const regenerateNbcPaperSubsection = async (id: string, data?: any) =>
+  apiJson(ENDPOINTS.NBC_PAPERS.REGENERATE_SUBSECTION(id), {
+    method: 'POST',
+    body: JSON.stringify(data ?? {}),
+  });
