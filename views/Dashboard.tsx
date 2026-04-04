@@ -17,16 +17,17 @@ export function Dashboard() {
   const [statsData, setStatsData] = useState<CompanyStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const userId = user.id;
   useEffect(() => {
-    if (!user.id || user.id === "u-1") {
+    if (!userId || userId === "u-1") {
       setLoading(false);
       return;
     }
-    getCompanyStats(user.id)
+    getCompanyStats(userId)
       .then(setStatsData)
-      .catch(() => {})
+      .catch((err) => console.error("Failed to load company stats:", err))
       .finally(() => setLoading(false));
-  }, [user.id]);
+  }, [userId]);
 
   return (
     <div className="mx-auto max-w-7xl p-8">

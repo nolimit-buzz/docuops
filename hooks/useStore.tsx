@@ -7,6 +7,15 @@ import { MOCK_USER, MOCK_ORG, MOCK_DOCS, MOCK_TEMPLATES, MOCK_KNOWLEDGE } from '
 import { getSessionUser, getSessionOrganization } from '../store/sessionUtils';
 import type { PaperType } from '../query/paperTypes';
 
+export interface PaperDraft {
+  paperTypeId: string;
+  paperTypeName: string;
+  clientName: string;
+  category: string;
+  budget: string;
+  timeline: string;
+}
+
 interface AppStore {
   user: User;
   organization: Organization;
@@ -14,6 +23,10 @@ interface AppStore {
   templates: Template[];
   knowledgeBase: KnowledgeChunk[];
   paperTypes: PaperType[];
+  paperDrafts: Record<string, PaperDraft>;
+
+  setPaperDraft: (id: string, draft: PaperDraft) => void;
+  clearPaperDraft: (id: string) => void;
 
   setUser: (u: User) => void;
   initFromSession: () => void;
@@ -39,6 +52,13 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
   templates: MOCK_TEMPLATES,
   knowledgeBase: MOCK_KNOWLEDGE,
   paperTypes: [],
+  paperDrafts: {},
+
+  setPaperDraft: (id, draft) => set((s) => ({ paperDrafts: { ...s.paperDrafts, [id]: draft } })),
+  clearPaperDraft: (id) => set((s) => {
+    const { [id]: _, ...rest } = s.paperDrafts;
+    return { paperDrafts: rest };
+  }),
 
   setUser: (u) => set({ user: u }),
 
@@ -83,5 +103,5 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
   },
 }), {
   name: 'digicred-auth',
-  partialize: (s) => ({ user: s.user }),
+  partialize: (s) => ({ user: s.user, paperTypes: s.paperTypes, paperDrafts: s.paperDrafts }),
 }));
