@@ -36,13 +36,38 @@ export interface KnowledgeChunk {
   createdAt: string;
 }
 
+export type TemplateSectionType = 
+  | 'heading' 
+  | 'text' 
+  | 'image' 
+  | 'icon'
+  | 'section' 
+  | 'columns' 
+  | 'separator' 
+  | 'page_break'
+  | 'input_text' 
+  | 'input_textarea' 
+  | 'input_number' 
+  | 'input_email' 
+  | 'input_phone' 
+  | 'input_dropdown' 
+  | 'input_single_select' 
+  | 'input_multi_select' 
+  | 'input_date_picker' 
+  | 'input_date_time';
+
 export interface TemplateSection {
   id: string;
+  type: TemplateSectionType;
   title: string;
   description?: string;
+  content?: string; // For text/heading blocks
+  placeholder?: string; // For input blocks
   systemPrompt: string; // The instruction to the AI
   userPromptPlaceholder?: string; // Hint for the user
   required: boolean;
+  options?: string[]; // For select/dropdown blocks
+  config?: Record<string, any>; // For extra settings like font, color, etc.
 }
 
 export interface Template {

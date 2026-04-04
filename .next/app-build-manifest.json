@@ -6,25 +6,20 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/(workspace)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(workspace)/layout.js"
     ],
+    "/(workspace)/templates/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(workspace)/templates/[id]/page.js"
+    ],
     "/(workspace)/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(workspace)/dashboard/page.js"
-    ],
-    "/(workspace)/templates/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(workspace)/templates/page.js"
     ],
     "/documents/[id]/page": [
       "static/chunks/webpack.js",
@@ -36,15 +31,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(workspace)/documents/page.js"
     ],
-    "/(workspace)/templates/[id]/page": [
+    "/(workspace)/templates/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(workspace)/templates/[id]/page.js"
+      "static/chunks/app/(workspace)/templates/page.js"
     ],
-    "/api/generate-section/route": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/generate-section/route.js"
+      "static/chunks/app/page.js"
     ]
   }
 }

@@ -20,9 +20,9 @@ export const MOCK_TEMPLATES: Template[] = [
     createdBy: 'u-1',
     updatedAt: new Date().toISOString(),
     sections: [
-      { id: 's-1', title: 'Executive Summary', systemPrompt: 'Summarize the project goals, timeline, and value proposition concisely.', required: true },
-      { id: 's-2', title: 'Scope of Work', systemPrompt: 'Detail the specific deliverables, phases, and technical requirements.', required: true },
-      { id: 's-3', title: 'Budget & Timeline', systemPrompt: 'Outline the cost breakdown and estimated delivery schedule.', required: true },
+      { id: 's-1', type: 'heading', title: 'Executive Summary', systemPrompt: 'Summarize the project goals, timeline, and value proposition concisely.', required: true },
+      { id: 's-2', type: 'text', title: 'Scope of Work', systemPrompt: 'Detail the specific deliverables, phases, and technical requirements.', required: true },
+      { id: 's-3', type: 'input_text', title: 'Budget Total', placeholder: 'e.g. $50,000', systemPrompt: 'Outline the cost breakdown and estimated delivery schedule.', required: true },
     ],
   },
   {
@@ -33,8 +33,8 @@ export const MOCK_TEMPLATES: Template[] = [
     createdBy: 'u-1',
     updatedAt: new Date().toISOString(),
     sections: [
-      { id: 's-1', title: 'Definitions', systemPrompt: 'Define Confidential Information and excluded information types.', required: true },
-      { id: 's-2', title: 'Obligations', systemPrompt: 'State the receiving party obligations regarding secrecy.', required: true },
+      { id: 's-1', type: 'heading', title: 'Definitions', systemPrompt: 'Define Confidential Information and excluded information types.', required: true },
+      { id: 's-2', type: 'input_textarea', title: 'Obligations', systemPrompt: 'State the receiving party obligations regarding secrecy.', required: true },
     ],
   },
 ];
