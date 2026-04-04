@@ -29,6 +29,7 @@ export const Templates: React.FC = () => {
       sections: [
         {
           id: `s-${Date.now()}-1`,
+          type: "text",
           title: "Introduction",
           systemPrompt: "Write a brief introduction.",
           required: true,
