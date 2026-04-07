@@ -7,6 +7,7 @@ export const ENDPOINTS = {
     REFRESH_TOKEN: '/auth/refresh-token',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
+    USER_INFO: '/userinfo',
   },
   ADMINS: {
     LIST: '/admins',

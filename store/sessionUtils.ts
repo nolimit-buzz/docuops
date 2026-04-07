@@ -1,4 +1,4 @@
-import { User, UserRole } from '../types';
+import { User, UserRole, Organization } from '../types';
 import { sessionHelper } from '@/lib/session';
 
 function mapSessionUser(raw: Record<string, unknown>): User {
@@ -26,6 +26,24 @@ function mapSessionUser(raw: Record<string, unknown>): User {
         ? raw.avatar
         : `https://placehold.co/100x100?text=${initials}`,
     organizationId: typeof raw.organizationId === 'string' ? raw.organizationId : '',
+  };
+}
+
+export function getSessionOrganization(): Organization | null {
+  const raw = sessionHelper.getCompany();
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  // userinfo structure: { id, firstName, ..., company: { id, name } }
+  const nested = r.company && typeof r.company === 'object'
+    ? r.company as Record<string, unknown>
+    : r;
+  const planRaw = typeof nested.plan === 'string' ? nested.plan : '';
+  const plan: Organization['plan'] =
+    planRaw === 'Pro' ? 'Pro' : planRaw === 'Enterprise' ? 'Enterprise' : 'Free';
+  return {
+    id: (typeof nested._id === 'string' ? nested._id : null) ?? (typeof nested.id === 'string' ? nested.id : 'org-api'),
+    name: (typeof nested.name === 'string' && nested.name ? nested.name : 'Organization'),
+    plan,
   };
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '@/hooks/useStore';
 import { UserRole } from '@/types';
@@ -10,6 +11,11 @@ export function Sidebar() {
   const { user, organization } = useStore();
   const p = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    useStore.getState().initFromSession();
+  }, []);
+
 
   function handleLogout() {
     sessionHelper.clearSession();
@@ -97,7 +103,7 @@ export function Sidebar() {
         <div className="flex items-center">
           <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full bg-slate-200" />
           <div className="ml-3">
-            <p className="text-sm font-medium text-slate-700">{user.name}</p>
+            <p className="text-sm font-medium text-slate-700">{user.email}</p>
             <p className="text-xs text-slate-500">{user.role}</p>
           </div>
         </div>

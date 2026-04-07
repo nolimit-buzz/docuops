@@ -49,6 +49,10 @@ export function persistAuthSession(payload: unknown) {
       session.refreshToken ?? '',
       session.user,
     );
+    const root = asRecord(payload);
+    if (root?.company) {
+      sessionHelper.setCompany(root.company);
+    }
     return true;
   }
 
