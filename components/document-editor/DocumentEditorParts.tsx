@@ -313,7 +313,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
         <div className="px-8 pb-8 pt-2">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-2">
-              {docSection?.ragSourcesUsed?.map((sourceId) => {
+              {docSection?.ragSourcesUsed?.map((sourceId: string) => {
                 const source = knowledgeBase.find((item) => item.id === sourceId);
                 if (!source) return null;
 

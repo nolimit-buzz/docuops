@@ -1,33 +1,42 @@
-import apiClient from '@/lib/sdk/api-client';
+'use server';
+
+import { apiJson } from '@/lib/query-helpers';
 import { ENDPOINTS } from '@/lib/sdk/endpoints';
 
-export const createMarketReport = (data: { countryName: string; year: string }) =>
-  apiClient.post(ENDPOINTS.MARKET_REPORTS.CREATE, data);
+export const createMarketReport = async (data: { countryName: string; year: string }) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.CREATE, { method: 'POST', body: JSON.stringify(data) });
 
-export const getMarketReport = (id: string) =>
-  apiClient.get(ENDPOINTS.MARKET_REPORTS.GET(id));
+export const getMarketReport = async (id: string) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.GET(id));
 
-export const updateMarketReport = (id: string, data: any) =>
-  apiClient.put(ENDPOINTS.MARKET_REPORTS.UPDATE(id), data);
+export const updateMarketReport = async (id: string, data: any) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.UPDATE(id), { method: 'PUT', body: JSON.stringify(data) });
 
-export const deleteMarketReport = (id: string) =>
-  apiClient.delete(ENDPOINTS.MARKET_REPORTS.DELETE(id));
+export const deleteMarketReport = async (id: string) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.DELETE(id), { method: 'DELETE' });
 
-export const submitMarketReport = (id: string, data?: any) =>
-  apiClient.put(ENDPOINTS.MARKET_REPORTS.SUBMIT(id), data);
+export const submitMarketReport = async (id: string, data?: any) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.SUBMIT(id), { method: 'PUT', body: JSON.stringify(data ?? {}) });
 
-export const updateMarketReportSection = (id: string, key: string, data: any) =>
-  apiClient.put(ENDPOINTS.MARKET_REPORTS.UPDATE_SECTION(id, key), data);
+export const updateMarketReportSection = async (id: string, key: string, data: any) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.UPDATE_SECTION(id, key), { method: 'PUT', body: JSON.stringify(data) });
 
-export const updateMarketReportSubsection = (
+export const updateMarketReportSubsection = async (
   id: string,
   sectionKey: string,
   subsectionKey: string,
   data: any
-) => apiClient.put(ENDPOINTS.MARKET_REPORTS.UPDATE_SUBSECTION(id, sectionKey, subsectionKey), data);
+) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.UPDATE_SUBSECTION(id, sectionKey, subsectionKey), {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
 
-export const regenerateMarketReport = (id: string, data?: any) =>
-  apiClient.post(ENDPOINTS.MARKET_REPORTS.REGENERATE(id), data);
+export const regenerateMarketReport = async (id: string, data?: any) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.REGENERATE(id), { method: 'POST', body: JSON.stringify(data ?? {}) });
 
-export const regenerateMarketReportSubsection = (id: string, data?: any) =>
-  apiClient.post(ENDPOINTS.MARKET_REPORTS.REGENERATE_SUBSECTION(id), data);
+export const regenerateMarketReportSubsection = async (id: string, data?: any) =>
+  apiJson(ENDPOINTS.MARKET_REPORTS.REGENERATE_SUBSECTION(id), {
+    method: 'POST',
+    body: JSON.stringify(data ?? {}),
+  });

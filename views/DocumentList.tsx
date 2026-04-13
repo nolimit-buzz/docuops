@@ -182,7 +182,7 @@ const DocumentListItem: React.FC<{ doc: Document }> = ({ doc }) => {
 };
 
 export const DocumentList: React.FC = () => {
-  const { documents } = useStore();
+  const { documents, paperDrafts } = useStore();
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [filterStatus, setFilterStatus] = useState<DocStatus | "All">("All");
   const [showIntake, setShowIntake] = useState(false);
@@ -190,16 +190,40 @@ export const DocumentList: React.FC = () => {
   const counts = useMemo(
     () => ({
       all: documents.length,
-      draft: documents.filter((doc) => doc.status === DocStatus.DRAFT).length,
+      draft: documents.filter((doc) => doc.status === DocStatus.DRAFT).length + Object.keys(paperDrafts).length,
       review: documents.filter((doc) => doc.status === DocStatus.REVIEW).length,
       approved: documents.filter((doc) => doc.status === DocStatus.APPROVED).length,
     }),
-    [documents],
+    [documents, paperDrafts],
   );
 
-  const filteredDocs = documents.filter((doc) =>
-    filterStatus === "All" ? true : doc.status === filterStatus,
+  const paperDraftDocs = useMemo<Document[]>(
+    () =>
+      Object.entries(paperDrafts).map(([id, draft]) => ({
+        id,
+        title: `${draft.paperTypeName} - ${draft.clientName}`,
+        templateId: 't-1',
+        status: DocStatus.DRAFT,
+        organizationId: '',
+        createdBy: '',
+        createdAt: new Date(Number(id.replace('draft-', ''))).toISOString(),
+        updatedAt: new Date(Number(id.replace('draft-', ''))).toISOString(),
+        sections: [],
+      })),
+    [paperDrafts],
   );
+
+  const filteredDocs = useMemo(() => {
+    const documentIds = new Set(documents.map((d) => d.id));
+    const uniquePaperDraftDocs = paperDraftDocs.filter((pd) => !documentIds.has(pd.id));
+    const base = documents.filter((doc) =>
+      filterStatus === "All" ? true : doc.status === filterStatus,
+    );
+    if (filterStatus === "All" || filterStatus === DocStatus.DRAFT) {
+      return [...uniquePaperDraftDocs, ...base];
+    }
+    return base;
+  }, [documents, paperDraftDocs, filterStatus]);
 
   return (
     <div className="mx-auto max-w-[1600px] p-6 lg:p-10">

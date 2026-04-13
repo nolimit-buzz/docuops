@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '@/hooks/useStore';
 import { UserRole } from '@/types';
 import { sessionHelper } from '@/lib/session';
+import { logout } from '@/query/auth';
 import { NavItem } from './NavItem';
 
 export function Sidebar() {
@@ -17,7 +18,8 @@ export function Sidebar() {
   }, []);
 
 
-  function handleLogout() {
+  async function handleLogout() {
+    await logout();
     sessionHelper.clearSession();
     useStore.persist.clearStorage();
     router.replace('/auth/login');

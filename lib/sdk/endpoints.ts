@@ -105,4 +105,10 @@ export const ENDPOINTS = {
     UPDATE: (id: string) => `/payload-migrations/${id}`,
     DELETE: (id: string) => `/payload-migrations/${id}`,
   },
+  COMPANY_STATS: {
+    GET: (userId: string) => `/company_stats/${userId}`,
+  },
+  PAPER_TYPES: {
+    LIST: '/paper_types',
+  },
 };

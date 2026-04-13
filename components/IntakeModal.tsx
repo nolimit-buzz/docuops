@@ -5,22 +5,22 @@ import { useRouter } from "next/navigation";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { useStore } from "../hooks/useStore";
-import { DocStatus } from "../types";
 import { DocTypeOption } from "./intake/DocTypeOption";
 import { SelectGroup } from "./intake/SelectGroup";
 import { SowIcon, BriefIcon, ProposalIcon } from "./intake/icons";
-import { createDocument } from "../query/documents";
+
+const ICONS = [<SowIcon key="sow" />, <BriefIcon key="brief" />, <ProposalIcon key="proposal" />];
 
 interface IntakeModalProps {
   onClose: () => void;
 }
 
 export function IntakeModal({ onClose }: IntakeModalProps) {
-  const { addDocument, templates, user } = useStore();
+  const { paperTypes, setPaperDraft } = useStore();
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [docType, setDocType] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [docTypeId, setDocTypeId] = useState<string | null>(null);
+  const [docTypeName, setDocTypeName] = useState<string | null>(null);
 
   const [clientName, setClientName] = useState("");
   const [category, setCategory] = useState("Clean Energy");
@@ -28,45 +28,22 @@ export function IntakeModal({ onClose }: IntakeModalProps) {
   const [timeline, setTimeline] = useState("4 weeks");
 
   const handleNext = () => {
-    if (docType) setStep(2);
+    if (docTypeId) setStep(2);
   };
 
-  const handleSubmit = async () => {
-    if (!docType) return;
-    setLoading(true);
-    try {
-      const processText = `Since this is a ${category} project for ${clientName}, our ${timeline} execution protocol applies.`;
-      const response: any = await createDocument(docType, {
-        clientName,
-        category,
-        budget,
-        timeline,
-        processSummary: processText,
-      });
-
-      const docId = String(response?.doc?.id || response?.id || Date.now());
-      const template = templates.find((t) => t.name.includes(docType)) || templates[0];
-
-      addDocument({
-        id: docId,
-        title: `${docType} - ${clientName}`,
-        templateId: template?.id || '',
-        status: DocStatus.DRAFT,
-        organizationId: user.organizationId,
-        createdBy: user.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        sections: [],
-        projectContext: { clientName, category, budget, timeline, processSummary: processText },
-      });
-
-      onClose();
-      router.push(`/documents/${docId}`);
-    } catch (err) {
-      console.error("Failed to create document:", err);
-    } finally {
-      setLoading(false);
-    }
+  const handleSubmit = () => {
+    if (!docTypeId || !docTypeName) return;
+    const draftId = `draft-${Date.now()}`;
+    setPaperDraft(draftId, {
+      paperTypeId: docTypeId,
+      paperTypeName: docTypeName,
+      clientName,
+      category,
+      budget,
+      timeline,
+    });
+    router.push(`/documents/${draftId}`);
+    onClose();
   };
 
   return (
@@ -98,27 +75,22 @@ export function IntakeModal({ onClose }: IntakeModalProps) {
         <div className="p-8 overflow-y-auto min-h-[400px]">
           {step === 1 ? (
             <div className="grid grid-cols-1 gap-4">
-              <DocTypeOption
-                selected={docType === "SOW"}
-                onClick={() => setDocType("SOW")}
-                title="Statement of Work (SOW)"
-                description="Formal document defining project scope, timeline, and deliverables."
-                icon={<SowIcon />}
-              />
-              <DocTypeOption
-                selected={docType === "Project Brief"}
-                onClick={() => setDocType("Project Brief")}
-                title="Project Brief"
-                description="High-level overview of goals and requirements."
-                icon={<BriefIcon />}
-              />
-              <DocTypeOption
-                selected={docType === "Proposal"}
-                onClick={() => setDocType("Proposal")}
-                title="Commercial Proposal"
-                description="Pitch document including pricing and value proposition."
-                icon={<ProposalIcon />}
-              />
+              {paperTypes.length > 0 ? (
+                paperTypes.map((type, idx) => (
+                  <DocTypeOption
+                    key={type.id}
+                    selected={docTypeId === type.id}
+                    onClick={() => { setDocTypeId(type.id); setDocTypeName(type.name); }}
+                    title={type.name}
+                    description={type.description}
+                    icon={ICONS[idx % ICONS.length]}
+                  />
+                ))
+              ) : (
+                <p className="py-8 text-center text-sm text-slate-400">
+                  No document types available.
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
@@ -174,9 +146,9 @@ export function IntakeModal({ onClose }: IntakeModalProps) {
                       Process Governance Match
                     </p>
                     <p className="text-sm text-indigo-900 leading-relaxed">
-                      "Since this is a <strong>{category}</strong> project for{" "}
+                      &quot;Since this is a <strong>{category}</strong> project for{" "}
                       <strong>{clientName}</strong>, our{" "}
-                      <strong>{timeline}</strong> execution protocol applies."
+                      <strong>{timeline}</strong> execution protocol applies.&quot;
                     </p>
                   </div>
                 </div>
@@ -191,18 +163,12 @@ export function IntakeModal({ onClose }: IntakeModalProps) {
             Cancel
           </Button>
           {step === 1 ? (
-            <Button onClick={handleNext} disabled={!docType}>
+            <Button onClick={handleNext} disabled={!docTypeId}>
               Continue
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={!clientName || loading} className="flex items-center gap-2">
-              {loading && (
-                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-              )}
-              {loading ? "Creating..." : "Create Document"}
+            <Button onClick={handleSubmit} disabled={!clientName}>
+              Create Document
             </Button>
           )}
         </div>

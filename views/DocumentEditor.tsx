@@ -15,8 +15,8 @@ export const DocumentEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { documents, updateDocument, templates, knowledgeBase, user } = useStore();
-  
+  const { documents, updateDocument, addDocument, templates, knowledgeBase, user, paperDrafts, clearPaperDraft } = useStore();
+
   const [doc, setDoc] = useState<Document | null>(null);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -44,8 +44,46 @@ export const DocumentEditor: React.FC = () => {
     if (found) {
       setDoc(found);
       setTitle(found.title);
+      return;
     }
-  }, [id, documents]);
+
+    // New draft — build local state only, don't touch the store
+    // (keeps paperDraft alive so the list page shows it without duplicating)
+    const draft = paperDrafts[id];
+    if (draft) {
+      const newDoc: Document = {
+        id,
+        title: `${draft.paperTypeName} - ${draft.clientName}`,
+        templateId: 't-1',
+        status: DocStatus.DRAFT,
+        organizationId: '',
+        createdBy: user.id,
+        createdAt: new Date(Number(id.replace('draft-', ''))).toISOString(),
+        updatedAt: new Date(Number(id.replace('draft-', ''))).toISOString(),
+        sections: [],
+        projectContext: {
+          clientName: draft.clientName,
+          category: draft.category,
+          budget: draft.budget,
+          timeline: draft.timeline,
+          processSummary: '',
+        },
+      };
+      setDoc(newDoc);
+      setTitle(newDoc.title);
+    }
+  }, [id, documents, paperDrafts]);
+
+  // Ensures a paperDraft-backed doc is promoted to the documents store before saving.
+  const persistDoc = (docToPersist: Document) => {
+    const alreadyInStore = documents.some(d => d.id === docToPersist.id);
+    if (!alreadyInStore) {
+      addDocument(docToPersist);
+      clearPaperDraft(docToPersist.id);
+    } else {
+      updateDocument(docToPersist);
+    }
+  };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -55,7 +93,7 @@ export const DocumentEditor: React.FC = () => {
     if (doc && title.trim() !== doc.title) {
         const updated = { ...doc, title, updatedAt: new Date().toISOString() };
         setDoc(updated);
-        updateDocument(updated);
+        persistDoc(updated);
     }
   };
 
@@ -106,7 +144,7 @@ export const DocumentEditor: React.FC = () => {
 
         const updatedDoc = { ...doc, sections: newSections, updatedAt: new Date().toISOString() };
         setDoc(updatedDoc);
-        updateDocument(updatedDoc);
+        persistDoc(updatedDoc);
         setMagicPrompt('');
 
     } catch (e) {
@@ -137,7 +175,7 @@ export const DocumentEditor: React.FC = () => {
 
     const updatedDoc = { ...doc, sections: newSections };
     setDoc(updatedDoc);
-    updateDocument(updatedDoc);
+    persistDoc(updatedDoc);
   };
 
   const handleFeedback = (sectionId: string, rating: 'positive' | 'negative' | null) => {
@@ -166,7 +204,7 @@ export const DocumentEditor: React.FC = () => {
         }
         const updatedDoc = { ...doc, sections: newSections };
         setDoc(updatedDoc);
-        updateDocument(updatedDoc);
+        persistDoc(updatedDoc);
     }
   };
 
@@ -184,7 +222,7 @@ export const DocumentEditor: React.FC = () => {
         };
         const updatedDoc = { ...doc, sections: newSections };
         setDoc(updatedDoc);
-        updateDocument(updatedDoc);
+        persistDoc(updatedDoc);
     }
   };
 
@@ -244,7 +282,7 @@ export const DocumentEditor: React.FC = () => {
     const updatedComments = [comment, ...(doc.globalComments || [])];
     const updatedDoc = { ...doc, globalComments: updatedComments };
     setDoc(updatedDoc);
-    updateDocument(updatedDoc);
+    persistDoc(updatedDoc);
     setNewComment('');
     setShowMentions(false);
   };
@@ -264,7 +302,7 @@ export const DocumentEditor: React.FC = () => {
     const updatedDoc = { ...doc, collaborators: [...currentCollaborators, newCollaborator] };
     
     setDoc(updatedDoc);
-    updateDocument(updatedDoc);
+    persistDoc(updatedDoc);
     setInviteEmail('');
     setIsInviting(false);
   };
@@ -567,7 +605,7 @@ export const DocumentEditor: React.FC = () => {
               onClose={() => setPreviewMode(null)} 
               onUpdate={(updated) => {
                   setDoc(updated);
-                  updateDocument(updated);
+                  persistDoc(updated);
               }}
           />
       )}
