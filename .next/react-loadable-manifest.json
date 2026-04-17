@@ -1,14 +1,14 @@
 {
   "hooks\\useStore.tsx -> ../query/documents": {
-    "id": 45827,
+    "id": 30487,
     "files": [
-      "static/chunks/827.41cab85a775ce4c1.js"
+      "static/chunks/487.0ddda7ade1e11416.js"
     ]
   },
   "hooks\\useStore.tsx -> ../query/paperTypes": {
-    "id": 84358,
+    "id": 1988,
     "files": [
-      "static/chunks/977.9c8fce19d27bbefe.js"
+      "static/chunks/988.b62b2f16083e493d.js"
     ]
   },
   "node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {

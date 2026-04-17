@@ -135,7 +135,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   onChange={(e) => onUpdate({ title: e.target.value })}
                 />
 
-                {(section.type === "text" || section.type === "heading") ? (
+                {section.type === "text" ? (
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-600">Content</label>
                     <textarea

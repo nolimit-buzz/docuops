@@ -48,8 +48,41 @@ export const TemplateEditor: React.FC = () => {
     return <div className="p-10 text-center">Template not found.</div>;
   }
 
+  const buildPayload = (t: Template) => ({
+    title: t.name,
+    category: t.category,
+    description: t.description,
+    fields: t.sections.map((s) => {
+      const isInput = s.type.startsWith("input_");
+      const base = {
+        label: s.title,
+        type: s.type,
+        prompt: s.systemPrompt || null,
+        required: s.required,
+        ...(isInput ? {} : { field_content: s.content ?? null }),
+      };
+      if (s.type === "heading")
+        return { ...base, heading_level: s.config?.level ?? "h2" };
+      if (s.type === "text")
+        return { ...base, variant: s.config?.variant ?? "body" };
+      if (isInput) {
+        const inputBase = { ...base, placeholder: s.placeholder ?? null };
+        if (s.type === "input_textarea")
+          return { ...inputBase, rows: s.config?.rows ?? null };
+        if (s.type === "input_number")
+          return { ...inputBase, min: s.config?.min ?? null, max: s.config?.max ?? null };
+        if (["input_dropdown", "input_single_select", "input_multi_select"].includes(s.type))
+          return { ...inputBase, options: s.options ?? [] };
+        return inputBase;
+      }
+      return base;
+    }),
+  });
+
   const handleSave = () => {
     if (!template) return;
+    const payload = buildPayload(template);
+    console.log("Template Payload:", JSON.stringify(payload, null, 2));
     updateTemplate({
       ...template,
       updatedAt: new Date().toISOString(),
