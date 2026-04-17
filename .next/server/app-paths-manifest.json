@@ -1,6 +1,13 @@
 {
+  "/api/generate-section/route": "app/api/generate-section/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/documents/[id]/page": "app/documents/[id]/page.js",
   "/page": "app/page.js",
   "/(workspace)/dashboard/page": "app/(workspace)/dashboard/page.js",
+  "/(workspace)/documents/page": "app/(workspace)/documents/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/(workspace)/templates/[id]/page": "app/(workspace)/templates/[id]/page.js",
   "/(workspace)/templates/page": "app/(workspace)/templates/page.js",
-  "/(workspace)/templates/[id]/page": "app/(workspace)/templates/[id]/page.js"
+  "/(workspace)/knowledge/page": "app/(workspace)/knowledge/page.js",
+  "/auth/register/page": "app/auth/register/page.js"
 }
