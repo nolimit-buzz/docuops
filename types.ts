@@ -78,6 +78,7 @@ export interface Template {
   sections: TemplateSection[];
   createdBy: string;
   updatedAt: string;
+  isDraft?: boolean;
 }
 
 export interface DocumentTemplateField {

@@ -39,7 +39,8 @@ interface AppStore {
 
   addTemplate: (temp: Template) => void;
   updateTemplate: (temp: Template) => void;
-  setTemplates: (templates: Template[]) => void;
+  deleteTemplate: (id: string) => void;
+  setTemplates: (templates: Template[] | ((prev: Template[]) => Template[])) => void;
 
   addKnowledge: (chunk: KnowledgeChunk) => void;
 
@@ -90,7 +91,8 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
 
   addTemplate: (temp) => set((s) => ({ templates: [temp, ...s.templates] })),
   updateTemplate: (temp) => set((s) => ({ templates: s.templates.map((t) => (t.id === temp.id ? temp : t)) })),
-  setTemplates: (temps) => set({ templates: temps }),
+  deleteTemplate: (id) => set((s) => ({ templates: s.templates.filter((t) => t.id !== id) })),
+  setTemplates: (temps) => set((s) => ({ templates: typeof temps === 'function' ? temps(s.templates) : temps })),
 
   addKnowledge: (chunk) => set((s) => ({ knowledgeBase: [chunk, ...s.knowledgeBase] })),
 
@@ -105,5 +107,5 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
   },
 }), {
   name: 'digicred-auth',
-  partialize: (s) => ({ user: s.user, paperTypes: s.paperTypes, paperDrafts: s.paperDrafts }),
+  partialize: (s) => ({ user: s.user, paperTypes: s.paperTypes, paperDrafts: s.paperDrafts, templates: s.templates }),
 }));

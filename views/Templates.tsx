@@ -17,16 +17,37 @@ export const Templates: React.FC = () => {
   const [newTempName, setNewTempName] = useState("");
   const [newTempDesc, setNewTempDesc] = useState("");
   const [newTempCat, setNewTempCat] = useState("General");
-  const [apiTemplates, setApiTemplates] = useState<DocumentTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filter templates: only show those that are NOT in draft IF there's a corresponding API template?
+  // Actually, we should just show the store's templates as the source of truth.
+  // We'll merge API templates into the store.
 
   useEffect(() => {
     setLoading(true);
     fetchDocumentTemplates().then((data) => {
-      setApiTemplates(data.docs);
-      // Sync to Zustand store
-      const mapped = data.docs.map(mapApiTemplateToLocal);
-      setTemplates([...templates.filter(t => t.id.startsWith('t-')), ...mapped]);
+      // Mapping API results to local format
+      const apiMapped = data.docs.map(mapApiTemplateToLocal);
+      
+      setTemplates((prevTemplates) => {
+        // Create a map of existing drafts by ID
+        const draftMap = new Map(
+          prevTemplates.filter(t => t.isDraft).map(t => [t.id, t])
+        );
+
+        // Merge logic:
+        // 1. Keep all local templates (IDs starting with 't-')
+        const localTemplates = prevTemplates.filter(t => t.id.startsWith('t-'));
+        
+        // 2. For each API template, use the draft from store if it exists, otherwise use fresh API data
+        const mergedApiTemplates = apiMapped.map(apiT => draftMap.get(apiT.id) || apiT);
+
+        // 3. Keep any API templates that are drafts but were NOT in the new API response (maybe deleted, but we keep the local draft)
+        const apiIdsInResponse = new Set(apiMapped.map(t => t.id));
+        const danglingDrafts = prevTemplates.filter(t => !t.id.startsWith('t-') && t.isDraft && !apiIdsInResponse.has(t.id));
+
+        return [...localTemplates, ...mergedApiTemplates, ...danglingDrafts];
+      });
     }).catch((err) => {
       console.error("Failed to fetch document templates:", err);
     }).finally(() => {
@@ -81,12 +102,12 @@ export const Templates: React.FC = () => {
           <div className="col-span-full py-12 text-center text-slate-500">
             Loading templates...
           </div>
-        ) : apiTemplates.length === 0 ? (
+        ) : templates.length === 0 ? (
           <div className="col-span-full py-12 text-center text-slate-500">
             No templates found.
           </div>
         ) : (
-          apiTemplates.map((template) => (
+          templates.map((template) => (
             <Card
               key={template.id}
               className="group flex h-full flex-col transition-colors hover:border-blue-300"
@@ -111,19 +132,26 @@ export const Templates: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                    {template.category}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    {template.isDraft && (
+                      <span className="rounded bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">
+                        Draft
+                      </span>
+                    )}
+                    <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                      {template.category}
+                    </span>
+                  </div>
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-slate-900 group-hover:text-blue-600">
-                  {template.title}
+                  {template.name}
                 </h3>
                 <p className="mb-4 line-clamp-3 text-sm text-slate-500">
                   {template.description}
                 </p>
 
                 <div className="flex items-center space-x-2 text-xs text-slate-400">
-                  <span>{template.fields.length} Sections</span>
+                  <span>{template.sections.length} Sections</span>
                   <span>&middot;</span>
                   <span>
                     Updated {new Date(template.updatedAt).toLocaleDateString()}

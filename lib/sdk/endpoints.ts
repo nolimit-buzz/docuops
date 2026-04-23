@@ -116,5 +116,6 @@ export const ENDPOINTS = {
     CREATE: '/document_templates',
     GET: (id: string) => `/document_templates/${id}`,
     UPDATE: (id: string) => `/document_templates/${id}`,
+    DELETE: (id: string) => `/document_templates/${id}`,
   },
 };

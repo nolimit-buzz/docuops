@@ -2,27 +2,30 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, Eye, Save, Send } from "lucide-react";
+import { ChevronLeft, Eye, Save, Send, Trash2 } from "lucide-react";
 import { Button } from "../components/ui/Button";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
+import toast from "react-hot-toast";
 import { useStore } from "../hooks/useStore";
 import { Template, TemplateSection, TemplateSectionType } from "../types";
 import { SidebarTabs, SidebarPanel, SidebarTab, TabSummaryBar } from "../components/editor/Sidebar";
 import { EditorBlock } from "../components/editor/EditorBlock";
 import { PropertiesPanel } from "../components/editor/PropertiesPanel";
 import { cn } from "@/lib/utils";
-import { fetchDocumentTemplateById, updateDocumentTemplate } from "@/query/document-templates";
+import { fetchDocumentTemplateById, updateDocumentTemplate, deleteDocumentTemplate } from "@/query/document-templates";
 import { mapApiTemplateToLocal, mapLocalTemplateToApiPayload } from "@/lib/template-mapper";
 
 export const TemplateEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { templates, updateTemplate, addTemplate } = useStore();
+  const { templates, updateTemplate, addTemplate, deleteTemplate } = useStore();
   
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<SidebarTab>("form");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const found = templates.find((item) => item.id === id);
@@ -67,26 +70,77 @@ export const TemplateEditor: React.FC = () => {
     return <div className="p-10 text-center">Template not found.</div>;
   }
 
-
   const handleSave = async () => {
+    const updatedTemplate: Template = {
+      ...template,
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    updateTemplate(updatedTemplate);
+    setTemplate(updatedTemplate);
+    toast.success("Draft saved successfully");
+  };
+
+  const handlePublish = async () => {
     if (!template) return;
     
-    const isApiTemplate = !template.id.startsWith("t-");
-    
-    if (isApiTemplate) {
-      try {
-        const payload = mapLocalTemplateToApiPayload(template);
+    setIsLoading(true);
+    try {
+      const isApiTemplate = !template.id.startsWith("t-");
+      const payload = mapLocalTemplateToApiPayload(template);
+      
+      let publishedTemplate: Template;
+      
+      if (isApiTemplate) {
         await updateDocumentTemplate(template.id, payload);
-        console.log("Successfully updated API template");
-      } catch (err) {
-        console.error("Failed to update API template:", err);
+        publishedTemplate = {
+          ...template,
+          isDraft: false,
+          updatedAt: new Date().toISOString(),
+        };
+      } else {
+        // Here you might call createDocumentTemplate if you want to promote t- templates to API
+        // For now let's assume we just mark as not draft
+        publishedTemplate = {
+          ...template,
+          isDraft: false,
+          updatedAt: new Date().toISOString(),
+        };
       }
-    }
 
-    updateTemplate({
-      ...template,
-      updatedAt: new Date().toISOString(),
-    });
+      updateTemplate(publishedTemplate);
+      setTemplate(publishedTemplate);
+      toast.success("Template published to database!");
+    } catch (err) {
+      console.error("Failed to publish template:", err);
+      toast.error("Failed to publish template");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteTemplate = async () => {
+    if (!template || !id) return;
+    
+    setIsLoading(true);
+    try {
+      const isApiTemplate = !template.id.startsWith("t-");
+      
+      if (isApiTemplate) {
+        await deleteDocumentTemplate(template.id);
+      }
+      
+      deleteTemplate(template.id);
+      toast.success("Template deleted");
+      router.push("/templates");
+    } catch (err) {
+      console.error("Failed to delete template:", err);
+      toast.error("Failed to delete template");
+    } finally {
+      setIsLoading(false);
+      setShowDeleteModal(false);
+    }
   };
 
   const addElement = (type: TemplateSectionType) => {
@@ -99,30 +153,46 @@ export const TemplateEditor: React.FC = () => {
       options: type.includes('select') || type === 'input_dropdown' ? ["Option 1", "Option 2"] : undefined,
     };
     
-    setTemplate({
+    const newTemplate = {
       ...template,
       sections: [...template.sections, newSection],
-    });
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    setTemplate(newTemplate);
+    updateTemplate(newTemplate);
     setSelectedSectionId(newSection.id);
   };
 
   const removeSection = (sectionId: string) => {
-    setTemplate({
+    const newTemplate = {
       ...template,
       sections: template.sections.filter((s) => s.id !== sectionId),
-    });
+      isDraft: true, // Mark as draft on change
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(newTemplate);
+    updateTemplate(newTemplate); // Sync to store
     if (selectedSectionId === sectionId) {
       setSelectedSectionId(null);
     }
   };
 
-  const updateSection = (sectionId: string, updates: Partial<TemplateSection>) => {
-    setTemplate({
+  const updateSection = (sectionId: string, updates: Partial<TemplateSection>, syncToStore = false) => {
+    if (!template) return;
+    const newTemplate = {
       ...template,
       sections: template.sections.map((s) =>
         s.id === sectionId ? { ...s, ...updates } : s
       ),
-    });
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(newTemplate);
+    if (syncToStore) {
+      updateTemplate(newTemplate);
+    }
   };
 
   const selectedSection = template.sections.find(s => s.id === selectedSectionId) || null;
@@ -145,9 +215,14 @@ export const TemplateEditor: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="sm" className="text-slate-600 hover:bg-slate-50">
-            <Eye className="mr-2 h-4 w-4" />
-            Preview
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowDeleteModal(true)}
+            className="text-red-500 hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
           </Button>
           <Button 
             variant="outline" 
@@ -158,7 +233,11 @@ export const TemplateEditor: React.FC = () => {
             <Save className="mr-2 h-4 w-4" />
             Save
           </Button>
-          <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 shadow-sm shadow-slate-200">
+          <Button 
+            size="sm" 
+            onClick={handlePublish}
+            className="bg-slate-900 text-white hover:bg-slate-800 shadow-sm shadow-slate-200"
+          >
             <Send className="mr-2 h-4 w-4" />
             Publish
           </Button>
@@ -247,11 +326,29 @@ export const TemplateEditor: React.FC = () => {
             section={selectedSection}
             activeTab={activeTab}
             onUpdate={(updates) => updateSection(selectedSectionId!, updates)}
-            onClose={() => setSelectedSectionId(null)}
+            onClose={() => {
+              updateSection(selectedSectionId!, {}, true); // Sync to store when closing/updating
+              setSelectedSectionId(null);
+              toast.success("Field configuration updated", {
+                icon: "⚙️",
+                duration: 2000,
+              });
+            }}
             onDelete={() => removeSection(selectedSectionId!)}
           />
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteTemplate}
+        isLoading={isLoading}
+        title="Delete Template"
+        message="Are you sure you want to delete this template? This action will permanently remove it from your workspace and cannot be undone."
+        confirmText="Permanently Delete"
+        variant="danger"
+      />
     </div>
   );
 };

@@ -8,6 +8,7 @@ export const mapApiTemplateToLocal = (apiTemplate: DocumentTemplate): Template =
     category: apiTemplate.category,
     createdBy: apiTemplate.company, // Using company as creator for now
     updatedAt: apiTemplate.updatedAt,
+    isDraft: false,
     sections: apiTemplate.fields.map((field, index) => mapApiFieldToSection(field, index)),
   };
 };

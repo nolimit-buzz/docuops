@@ -35,3 +35,8 @@ export const updateDocumentTemplate = async (
     method: 'PATCH',
     body: JSON.stringify(data),
   });
+
+export const deleteDocumentTemplate = async (id: string): Promise<void> =>
+  apiJson<void>(ENDPOINTS.DOCUMENT_TEMPLATES.DELETE(id), {
+    method: 'DELETE',
+  });
