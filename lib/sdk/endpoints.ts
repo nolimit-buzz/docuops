@@ -111,4 +111,8 @@ export const ENDPOINTS = {
   PAPER_TYPES: {
     LIST: '/paper_types',
   },
+  DOCUMENT_TEMPLATES: {
+    LIST: '/document_templates',
+    CREATE: '/document_templates',
+  },
 };

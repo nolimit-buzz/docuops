@@ -53,8 +53,8 @@ export function DashboardCharts({ chartData, loading }: DashboardChartsProps) {
     <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
       <Card className="p-6">
         <h3 className="mb-6 text-lg font-semibold text-slate-800">Document Volume</h3>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full">
+          <ResponsiveContainer width="100%" height={256}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" {...AXIS_STYLE} tickLine={false} axisLine={false} />
@@ -68,8 +68,8 @@ export function DashboardCharts({ chartData, loading }: DashboardChartsProps) {
 
       <Card className="p-6">
         <h3 className="mb-6 text-lg font-semibold text-slate-800">Token Usage Trend</h3>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full">
+          <ResponsiveContainer width="100%" height={256}>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" {...AXIS_STYLE} tickLine={false} axisLine={false} />

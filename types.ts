@@ -80,6 +80,39 @@ export interface Template {
   updatedAt: string;
 }
 
+export interface DocumentTemplateField {
+  label: string;
+  type: TemplateSectionType;
+  prompt: string | null;
+  required: boolean;
+  placeholder?: string | null;
+  field_content?: string;
+  heading_level?: string;
+  options?: string[];
+  rows?: number | null;
+}
+
+export interface DocumentTemplate {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  company: string;
+  title: string;
+  category: string;
+  description: string;
+  fields: DocumentTemplateField[];
+}
+
+export interface DocumentTemplatesResponse {
+  docs: DocumentTemplate[];
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 export interface Comment {
   id: string;
   userId: string;
