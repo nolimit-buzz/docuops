@@ -108,4 +108,14 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
 }), {
   name: 'digicred-auth',
   partialize: (s) => ({ user: s.user, paperTypes: s.paperTypes, paperDrafts: s.paperDrafts, templates: s.templates }),
+  version: 1,
+  migrate: (persistedState: any, version: number) => {
+    if (version === 0) {
+      // Cleanup corrupt templates with no IDs
+      if (persistedState && Array.isArray(persistedState.templates)) {
+        persistedState.templates = persistedState.templates.filter((t: any) => t && t.id);
+      }
+    }
+    return persistedState;
+  },
 }));

@@ -102,6 +102,7 @@ export interface DocumentTemplate {
   category: string;
   description: string;
   fields: DocumentTemplateField[];
+  status?: string;
 }
 
 export interface DocumentTemplatesResponse {

@@ -12,14 +12,14 @@ import { SidebarTabs, SidebarPanel, SidebarTab, TabSummaryBar } from "../compone
 import { EditorBlock } from "../components/editor/EditorBlock";
 import { PropertiesPanel } from "../components/editor/PropertiesPanel";
 import { cn } from "@/lib/utils";
-import { fetchDocumentTemplateById, updateDocumentTemplate, deleteDocumentTemplate } from "@/query/document-templates";
+import { fetchDocumentTemplateById, updateDocumentTemplate, deleteDocumentTemplate, createDocumentTemplate, fetchDocumentTemplates } from "@/query/document-templates";
 import { mapApiTemplateToLocal, mapLocalTemplateToApiPayload } from "@/lib/template-mapper";
 
 export const TemplateEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { templates, updateTemplate, addTemplate, deleteTemplate } = useStore();
+  const { templates, updateTemplate, addTemplate, deleteTemplate, setTemplates, organization } = useStore();
   
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,35 +83,104 @@ export const TemplateEditor: React.FC = () => {
   };
 
   const handlePublish = async () => {
-    if (!template) return;
+    if (!template || !id || id === "undefined" || template.id === "undefined") {
+      toast.error("Invalid template ID. Cannot publish.");
+      return;
+    }
     
     setIsLoading(true);
     try {
-      const isApiTemplate = !template.id.startsWith("t-");
+      const isApiTemplate = template.id && !template.id.startsWith("t-");
       const payload = mapLocalTemplateToApiPayload(template);
       
-      let publishedTemplate: Template;
+      const companyId = organization.id?.length > 10 
+        ? organization.id 
+        : "00000000-0000-0000-0000-000000000001"; // Fallback to provided valid UUID
       
-      if (isApiTemplate) {
-        await updateDocumentTemplate(template.id, payload);
-        publishedTemplate = {
-          ...template,
-          isDraft: false,
-          updatedAt: new Date().toISOString(),
-        };
-      } else {
-        // Here you might call createDocumentTemplate if you want to promote t- templates to API
-        // For now let's assume we just mark as not draft
-        publishedTemplate = {
-          ...template,
-          isDraft: false,
-          updatedAt: new Date().toISOString(),
-        };
+      let publishedTemplate: Template;
+      let finalId = template.id;
+      
+      // Determine if we should PATCH or POST
+      let shouldCreate = !isApiTemplate;
+      
+      if (shouldCreate) {
+        // Double check if a template with the same title already exists as an API template
+        const existingApiTemplate = templates.find(t => 
+          t.id && !t.id.startsWith("t-") && 
+          t.name?.toLowerCase() === template.name?.toLowerCase()
+        );
+        
+        if (existingApiTemplate) {
+          console.log("Found existing API template with same title. Switching to update mode.", existingApiTemplate.id);
+          finalId = existingApiTemplate.id;
+          shouldCreate = false;
+        }
       }
 
-      updateTemplate(publishedTemplate);
-      setTemplate(publishedTemplate);
-      toast.success("Template published to database!");
+      if (!shouldCreate) {
+        // Update existing (PATCH)
+        await updateDocumentTemplate(finalId, payload);
+        publishedTemplate = {
+          ...template,
+          id: finalId, // Ensure we use the correct ID if we matched by name
+          isDraft: false,
+          updatedAt: new Date().toISOString(),
+        };
+        
+        // If the ID was local, we need to replace it in the store
+        if (template.id && template.id.startsWith("t-")) {
+          deleteTemplate(template.id);
+          addTemplate(publishedTemplate);
+        } else {
+          updateTemplate(publishedTemplate);
+        }
+        
+        setTemplate(publishedTemplate);
+        
+        // If we switched IDs, redirect to the new correct URL
+        if (template.id !== finalId) {
+          router.replace(`/templates/${finalId}`);
+        }
+      } else {
+        // Create new template (POST)
+        // We ensure company is strictly from organization.id
+        const apiResponse = await createDocumentTemplate({
+          title: template.name,
+          category: template.category,
+          description: template.description || "",
+          fields: payload.fields,
+          status: "active",
+          company: organization.id, 
+        });
+        
+        publishedTemplate = mapApiTemplateToLocal(apiResponse);
+        
+        // Replace the local template with the API one
+        deleteTemplate(template.id);
+        addTemplate(publishedTemplate);
+        setTemplate(publishedTemplate);
+        
+        // Redirect to the new API-backed URL
+        // router.replace(`/templates/${publishedTemplate.id}`);
+      }
+
+      // 1. Refetch the entire list from backend
+      const { docs } = await fetchDocumentTemplates();
+      const apiMapped = docs.map(mapApiTemplateToLocal);
+      
+      // 2. Remove the CURRENT local template from state (it's now in the API list)
+      // and keep other local drafts (starting with t- but NOT the current one)
+      setTemplates((prev) => {
+        const validPrev = Array.isArray(prev) ? prev.filter(t => t && t.id) : [];
+        const others = validPrev.filter(t => t.id !== template.id);
+        const localDrafts = others.filter(t => t.id && t.id.startsWith("t-"));
+        return [...localDrafts, ...apiMapped.filter(t => t && t.id)];
+      });
+
+      toast.success("Template published correctly!");
+      
+      // 3. Redirect back to templates list as requested
+      router.push("/templates");
     } catch (err) {
       console.error("Failed to publish template:", err);
       toast.error("Failed to publish template");
@@ -121,11 +190,14 @@ export const TemplateEditor: React.FC = () => {
   };
 
   const handleDeleteTemplate = async () => {
-    if (!template || !id) return;
+    if (!template || !id || id === "undefined" || template.id === "undefined") {
+      toast.error("Invalid template ID. Cannot delete.");
+      return;
+    }
     
     setIsLoading(true);
     try {
-      const isApiTemplate = !template.id.startsWith("t-");
+      const isApiTemplate = template.id && !template.id.startsWith("t-");
       
       if (isApiTemplate) {
         await deleteDocumentTemplate(template.id);

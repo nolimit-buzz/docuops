@@ -27,24 +27,26 @@ export const Templates: React.FC = () => {
     setLoading(true);
     fetchDocumentTemplates().then((data) => {
       // Mapping API results to local format
-      const apiMapped = data.docs.map(mapApiTemplateToLocal);
+      const apiMapped = data.docs.map(mapApiTemplateToLocal).filter(t => t && t.id);
       
       setTemplates((prevTemplates) => {
+        const validPrev = Array.isArray(prevTemplates) ? prevTemplates.filter(t => t && t.id) : [];
+        
         // Create a map of existing drafts by ID
         const draftMap = new Map(
-          prevTemplates.filter(t => t.isDraft).map(t => [t.id, t])
+          validPrev.filter(t => t.isDraft).map(t => [t.id, t])
         );
 
         // Merge logic:
         // 1. Keep all local templates (IDs starting with 't-')
-        const localTemplates = prevTemplates.filter(t => t.id.startsWith('t-'));
+        const localTemplates = validPrev.filter(t => t.id && t.id.startsWith('t-'));
         
         // 2. For each API template, use the draft from store if it exists, otherwise use fresh API data
         const mergedApiTemplates = apiMapped.map(apiT => draftMap.get(apiT.id) || apiT);
 
         // 3. Keep any API templates that are drafts but were NOT in the new API response (maybe deleted, but we keep the local draft)
         const apiIdsInResponse = new Set(apiMapped.map(t => t.id));
-        const danglingDrafts = prevTemplates.filter(t => !t.id.startsWith('t-') && t.isDraft && !apiIdsInResponse.has(t.id));
+        const danglingDrafts = validPrev.filter(t => t.id && !t.id.startsWith('t-') && t.isDraft && !apiIdsInResponse.has(t.id));
 
         return [...localTemplates, ...mergedApiTemplates, ...danglingDrafts];
       });

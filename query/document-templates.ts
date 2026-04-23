@@ -16,6 +16,7 @@ export const createDocumentTemplate = async (data: {
   category: string;
   description: string;
   fields: DocumentTemplate['fields'];
+  status?: string;
 }): Promise<DocumentTemplate> =>
   apiJson<DocumentTemplate>(ENDPOINTS.DOCUMENT_TEMPLATES.CREATE, {
     method: 'POST',
@@ -29,6 +30,7 @@ export const updateDocumentTemplate = async (
     category?: string;
     description?: string;
     fields?: DocumentTemplate['fields'];
+    status?: string;
   }
 ): Promise<DocumentTemplate> =>
   apiJson<DocumentTemplate>(ENDPOINTS.DOCUMENT_TEMPLATES.UPDATE(id), {

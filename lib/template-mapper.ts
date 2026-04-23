@@ -2,14 +2,16 @@ import { DocumentTemplate, DocumentTemplateField, Template, TemplateSection } fr
 
 export const mapApiTemplateToLocal = (apiTemplate: DocumentTemplate): Template => {
   return {
-    id: apiTemplate.id,
-    name: apiTemplate.title,
+    id: apiTemplate.id || "",
+    name: apiTemplate.title || "Untitled",
     description: apiTemplate.description,
     category: apiTemplate.category,
     createdBy: apiTemplate.company, // Using company as creator for now
     updatedAt: apiTemplate.updatedAt,
     isDraft: false,
-    sections: apiTemplate.fields.map((field, index) => mapApiFieldToSection(field, index)),
+    sections: Array.isArray(apiTemplate.fields) 
+      ? apiTemplate.fields.map((field, index) => mapApiFieldToSection(field, index))
+      : [],
   };
 };
 
@@ -44,6 +46,7 @@ export const mapLocalTemplateToApiPayload = (t: Template) => {
     title: t.name,
     category: t.category,
     description: t.description,
+    status: "active",
     fields: t.sections.map((s) => {
       const isInput = s.type.startsWith("input_");
       const base: any = {
