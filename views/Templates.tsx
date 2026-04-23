@@ -1,20 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { useStore } from "../hooks/useStore";
-import { Template } from "../types";
+import { DocumentTemplate, DocumentTemplateField, Template } from "../types";
+import { fetchDocumentTemplates } from "@/query/document-templates";
+import { mapApiTemplateToLocal } from "@/lib/template-mapper";
 
 export const Templates: React.FC = () => {
-  const { templates, addTemplate } = useStore();
+  const { templates, addTemplate, setTemplates } = useStore();
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [newTempName, setNewTempName] = useState("");
   const [newTempDesc, setNewTempDesc] = useState("");
   const [newTempCat, setNewTempCat] = useState("General");
+  const [apiTemplates, setApiTemplates] = useState<DocumentTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchDocumentTemplates().then((data) => {
+      setApiTemplates(data.docs);
+      // Sync to Zustand store
+      const mapped = data.docs.map(mapApiTemplateToLocal);
+      setTemplates([...templates.filter(t => t.id.startsWith('t-')), ...mapped]);
+    }).catch((err) => {
+      console.error("Failed to fetch document templates:", err);
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, []);
 
   const handleCreate = () => {
     if (!newTempName.trim()) {
@@ -59,63 +77,73 @@ export const Templates: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {templates.map((template) => (
-          <Card
-            key={template.id}
-            className="group flex h-full flex-col transition-colors hover:border-blue-300"
-          >
-            <div
-              className="flex-1 cursor-pointer p-6"
-              onClick={() => router.push(`/templates/${template.id}`)}
+        {loading ? (
+          <div className="col-span-full py-12 text-center text-slate-500">
+            Loading templates...
+          </div>
+        ) : apiTemplates.length === 0 ? (
+          <div className="col-span-full py-12 text-center text-slate-500">
+            No templates found.
+          </div>
+        ) : (
+          apiTemplates.map((template) => (
+            <Card
+              key={template.id}
+              className="group flex h-full flex-col transition-colors hover:border-blue-300"
             >
-              <div className="mb-4 flex items-start justify-between">
-                <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600 transition-colors group-hover:bg-indigo-100">
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
-                <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                  {template.category}
-                </span>
-              </div>
-              <h3 className="mb-2 text-lg font-bold text-slate-900 group-hover:text-blue-600">
-                {template.name}
-              </h3>
-              <p className="mb-4 line-clamp-3 text-sm text-slate-500">
-                {template.description}
-              </p>
-
-              <div className="flex items-center space-x-2 text-xs text-slate-400">
-                <span>{template.sections.length} Sections</span>
-                <span>&middot;</span>
-                <span>
-                  Updated {new Date(template.updatedAt).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-end rounded-b-xl border-t border-slate-100 bg-slate-50 p-4">
-              <button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  router.push(`/templates/${template.id}`);
-                }}
-                className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
+              <div
+                className="flex-1 cursor-pointer p-6"
+                onClick={() => router.push(`/templates/${template.id}`)}
               >
-                Edit Structure <span className="ml-1">-&gt;</span>
-              </button>
-            </div>
-          </Card>
-        ))}
+                <div className="mb-4 flex items-start justify-between">
+                  <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600 transition-colors group-hover:bg-indigo-100">
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                    {template.category}
+                  </span>
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-slate-900 group-hover:text-blue-600">
+                  {template.title}
+                </h3>
+                <p className="mb-4 line-clamp-3 text-sm text-slate-500">
+                  {template.description}
+                </p>
+
+                <div className="flex items-center space-x-2 text-xs text-slate-400">
+                  <span>{template.fields.length} Sections</span>
+                  <span>&middot;</span>
+                  <span>
+                    Updated {new Date(template.updatedAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-end rounded-b-xl border-t border-slate-100 bg-slate-50 p-4">
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    router.push(`/templates/${template.id}`);
+                  }}
+                  className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Edit Structure <span className="ml-1">-&gt;</span>
+                </button>
+              </div>
+            </Card>
+          ))
+        )}
       </div>
 
       {showModal && (

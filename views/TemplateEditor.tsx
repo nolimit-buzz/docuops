@@ -10,12 +10,14 @@ import { SidebarTabs, SidebarPanel, SidebarTab, TabSummaryBar } from "../compone
 import { EditorBlock } from "../components/editor/EditorBlock";
 import { PropertiesPanel } from "../components/editor/PropertiesPanel";
 import { cn } from "@/lib/utils";
+import { fetchDocumentTemplateById, updateDocumentTemplate } from "@/query/document-templates";
+import { mapApiTemplateToLocal, mapLocalTemplateToApiPayload } from "@/lib/template-mapper";
 
 export const TemplateEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { templates, updateTemplate } = useStore();
+  const { templates, updateTemplate, addTemplate } = useStore();
   
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,9 +28,26 @@ export const TemplateEditor: React.FC = () => {
     const found = templates.find((item) => item.id === id);
     if (found) {
       setTemplate(JSON.parse(JSON.stringify(found)) as Template);
+      setIsLoading(false);
+    } else if (id) {
+      // Try fetching from API
+      setIsLoading(true);
+      fetchDocumentTemplateById(id)
+        .then((apiTemp) => {
+          const mapped = mapApiTemplateToLocal(apiTemp);
+          setTemplate(mapped);
+          addTemplate(mapped); // Save to store as requested
+        })
+        .catch((err) => {
+          console.error("Failed to fetch template:", err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [id, templates]);
+  }, [id, templates, addTemplate]);
 
   useEffect(() => {
     if (activeTab === "sections" && template?.sections.length && !selectedSectionId) {
@@ -48,41 +67,22 @@ export const TemplateEditor: React.FC = () => {
     return <div className="p-10 text-center">Template not found.</div>;
   }
 
-  const buildPayload = (t: Template) => ({
-    title: t.name,
-    category: t.category,
-    description: t.description,
-    fields: t.sections.map((s) => {
-      const isInput = s.type.startsWith("input_");
-      const base = {
-        label: s.title,
-        type: s.type,
-        prompt: s.systemPrompt || null,
-        required: s.required,
-        ...(isInput ? {} : { field_content: s.content ?? null }),
-      };
-      if (s.type === "heading")
-        return { ...base, heading_level: s.config?.level ?? "h2" };
-      if (s.type === "text")
-        return { ...base, variant: s.config?.variant ?? "body" };
-      if (isInput) {
-        const inputBase = { ...base, placeholder: s.placeholder ?? null };
-        if (s.type === "input_textarea")
-          return { ...inputBase, rows: s.config?.rows ?? null };
-        if (s.type === "input_number")
-          return { ...inputBase, min: s.config?.min ?? null, max: s.config?.max ?? null };
-        if (["input_dropdown", "input_single_select", "input_multi_select"].includes(s.type))
-          return { ...inputBase, options: s.options ?? [] };
-        return inputBase;
-      }
-      return base;
-    }),
-  });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!template) return;
-    const payload = buildPayload(template);
-    console.log("Template Payload:", JSON.stringify(payload, null, 2));
+    
+    const isApiTemplate = !template.id.startsWith("t-");
+    
+    if (isApiTemplate) {
+      try {
+        const payload = mapLocalTemplateToApiPayload(template);
+        await updateDocumentTemplate(template.id, payload);
+        console.log("Successfully updated API template");
+      } catch (err) {
+        console.error("Failed to update API template:", err);
+      }
+    }
+
     updateTemplate({
       ...template,
       updatedAt: new Date().toISOString(),

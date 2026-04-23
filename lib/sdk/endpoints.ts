@@ -114,5 +114,7 @@ export const ENDPOINTS = {
   DOCUMENT_TEMPLATES: {
     LIST: '/document_templates',
     CREATE: '/document_templates',
+    GET: (id: string) => `/document_templates/${id}`,
+    UPDATE: (id: string) => `/document_templates/${id}`,
   },
 };
