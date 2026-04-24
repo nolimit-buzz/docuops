@@ -301,13 +301,59 @@ export const SectionCard: React.FC<SectionCardProps> = ({
           }`}
       >
         <div className="p-1">
-          <textarea
-            className="min-h-[160px] w-full resize-y bg-transparent p-8 text-base leading-relaxed text-slate-600 outline-none placeholder-slate-300"
-            value={contentText}
-            onChange={(event) => onContentUpdate(section.id, event.target.value)}
-            placeholder="Click here to start typing, or use the AI prompt below..."
-            onFocus={() => onFocus(section.id)}
-          />
+          {section.type.startsWith("input_") ? (
+            <div className="p-8">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">
+                {section.title} Data Entry
+              </label>
+              {section.type === "input_textarea" ? (
+                <textarea
+                  className="w-full min-h-[120px] bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                  value={contentText}
+                  onChange={(e) => onContentUpdate(section.id, e.target.value)}
+                  placeholder={section.placeholder || "Enter details..."}
+                  onFocus={() => onFocus(section.id)}
+                />
+              ) : section.type === "input_dropdown" || section.type === "input_single_select" ? (
+                <select
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none"
+                  value={contentText}
+                  onChange={(e) => onContentUpdate(section.id, e.target.value)}
+                  onFocus={() => onFocus(section.id)}
+                >
+                  <option value="">Select an option...</option>
+                  {section.options?.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={
+                    section.type === "input_number"
+                      ? "number"
+                      : section.type === "input_date_picker"
+                        ? "date"
+                        : "text"
+                  }
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
+                  value={contentText}
+                  onChange={(e) => onContentUpdate(section.id, e.target.value)}
+                  placeholder={section.placeholder || `Enter ${section.title.toLowerCase()}...`}
+                  onFocus={() => onFocus(section.id)}
+                />
+              )}
+            </div>
+          ) : (
+            <textarea
+              className="min-h-[160px] w-full resize-y bg-transparent p-8 text-base leading-relaxed text-slate-600 outline-none placeholder-slate-300"
+              value={contentText}
+              onChange={(event) => onContentUpdate(section.id, event.target.value)}
+              placeholder="Click here to start typing, or use the AI prompt below..."
+              onFocus={() => onFocus(section.id)}
+            />
+          )}
         </div>
 
         <div className="px-8 pb-8 pt-2">

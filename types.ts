@@ -176,3 +176,30 @@ export interface Document {
   globalComments?: Comment[];
   collaborators?: DocumentCollaborator[];
 }
+
+export interface GeneratorSection {
+  sectionId: string;
+  templateSectionId: string;
+  title: string;
+  type: TemplateSectionType;
+  content: string;
+  isAiGenerated: boolean;
+  systemPrompt: string;
+  required: boolean;
+  config?: Record<string, any>;
+  ragSourcesUsed: string[];
+}
+
+export interface GeneratorPayload {
+  documentId: string;
+  title: string;
+  templateId: string;
+  templateName: string;
+  organizationId: string;
+  createdBy: string;
+  projectContext: ProjectContext;
+  sections: GeneratorSection[];
+  collaborators?: DocumentCollaborator[];
+  comments?: Comment[];
+  timestamp: string;
+}

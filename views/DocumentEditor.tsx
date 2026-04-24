@@ -9,6 +9,7 @@ import { DocumentOutline, SectionCard, SourceViewerModal, StatusStepper } from '
 import { generateSectionContent } from '../services/geminiService';
 import { DocStatus, Document, DocumentSectionFeedback, TemplateSection, KnowledgeChunk, Comment, UserRole } from '../types';
 import { DocumentPreviewModal } from '../components/DocumentPreviewModal';
+import { createGeneratorPayload } from '../lib/payload-generator';
 // --- Main Component ---
 
 export const DocumentEditor: React.FC = () => {
@@ -54,7 +55,7 @@ export const DocumentEditor: React.FC = () => {
       const newDoc: Document = {
         id,
         title: `${draft.paperTypeName} - ${draft.clientName}`,
-        templateId: 't-1',
+        templateId: draft.paperTypeId,
         status: DocStatus.DRAFT,
         organizationId: '',
         createdBy: user.id,
@@ -116,7 +117,20 @@ export const DocumentEditor: React.FC = () => {
             ? `${templateSection.systemPrompt}\n\nAdditional Instruction: ${customInstruction}`
             : templateSection.systemPrompt;
             
-        const userNotes = doc.projectContext ? JSON.stringify(doc.projectContext) : "";
+        // Include both project context AND any manual inputs from other sections as context
+        const contextPayload = {
+            project: doc.projectContext,
+            inputs: doc.sections.reduce((acc, s) => {
+                const sectionDef = templates.find(t => t.id === doc.templateId)?.sections.find(ts => ts.id === s.sectionId);
+                // Only include sections that are specifically structured inputs
+                if (sectionDef?.type.startsWith('input_')) {
+                    acc[sectionDef.title] = s.content;
+                }
+                return acc;
+            }, {} as Record<string, string>)
+        };
+
+        const userNotes = JSON.stringify(contextPayload, null, 2);
         
         const result = await generateSectionContent(
             templateSection.title,
@@ -229,6 +243,26 @@ export const DocumentEditor: React.FC = () => {
   const handleMagicSubmit = (sectionId: string, section: TemplateSection) => {
       if (!magicPrompt.trim()) return;
       handleGenerate(sectionId, section, magicPrompt);
+  };
+
+  const handleGenerateAll = async () => {
+    if (!doc || !template) return;
+    
+    // Find sections that are NOT input fields and are currently empty
+    const sectionsToGenerate = template.sections.filter(ts => {
+        const isInput = ts.type.startsWith('input_');
+        const hasContent = doc.sections.some(ds => ds.sectionId === ts.id && ds.content.trim().length > 0);
+        return !isInput && !hasContent;
+    });
+
+    if (sectionsToGenerate.length === 0) {
+        alert("All sections already have content!");
+        return;
+    }
+
+    for (const section of sectionsToGenerate) {
+        await handleGenerate(section.id, section);
+    }
   };
   
   const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -434,10 +468,49 @@ export const DocumentEditor: React.FC = () => {
           <div className="p-6 border-b border-slate-100">
               <Button 
                 className="w-full h-12 text-base font-bold shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5"
-                onClick={() => setPreviewMode('client')}
+                onClick={async () => {
+                  if (doc && template) {
+                    const payload = createGeneratorPayload(doc, template);
+                    console.log("%c🚀 GENERATOR PAYLOAD CAPTURED", "color: #8b5cf6; font-weight: bold; font-size: 14px;");
+                    console.log(payload);
+
+                    // Send to server console
+                    try {
+                      await fetch('/api/log-payload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                      });
+                    } catch (e) {
+                      console.error("Failed to send payload to server console:", e);
+                    }
+                  }
+                  setPreviewMode('client');
+                }}
               >
                   {doc.status === DocStatus.APPROVED ? 'View Signed Document' : 'Review & Approve'}
               </Button>
+              
+              {!doc.status || doc.status === DocStatus.DRAFT && (
+                <Button 
+                  variant="outline"
+                  className="w-full h-12 text-sm font-bold mt-4 border-purple-200 text-purple-600 hover:bg-purple-50 transition-all shadow-sm"
+                  onClick={handleGenerateAll}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Generating Engine...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                       Generate Missing Sections
+                    </span>
+                  )}
+                </Button>
+              )}
               <p className="text-[11px] text-center text-slate-400 mt-3 font-medium">Finalize and lock document</p>
           </div>
 

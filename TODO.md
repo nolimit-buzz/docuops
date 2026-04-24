@@ -1,15 +1,17 @@
 # DocuOps Project TODO List
 
 ## 🎯 Active Tasks
-- [ ] Generate and send document payload type to CJ for backend integrations
-- [ ] Implement core logic for document generation from active template inputs
-- [ ] Structural optimization of the generator payload forbackend processing
 - [ ] Integrate `IntakeModal` with the generator pipeline (Blocked: Pending CJ's endpoint)
-- [ ] Document creation modal should choose from template type we have when creating new document
 - [ ] Final UI/UX polish on the template builder sidebar and progress indicators
 - [ ] Run load testing with multi-section templates
+- [ ] Cleanup: Remove debug payload logging from browser and server consoles
 
-## ✅ Completed (April 23, 2026)
+## ✅ Completed (April 24, 2026)
+- [x] Implemented core generation engine with context injection from template inputs
+- [x] Structural optimization of the generator payload for backend processing
+- [x] Defined and implemented `GeneratorPayload` for backend/CJ integration
+- [x] Refactored Document creation modal to use searchable Template system
+- [x] Implementation of searchable combobox for template selection in IntakeModal
 - [x] Full Document Template CRUD lifecycle (Create, Edit, Delete)
 - [x] Implementation of "Draft" states for persistent template editing
 - [x] Advanced field configuration logic (conditional visibility & validation)
