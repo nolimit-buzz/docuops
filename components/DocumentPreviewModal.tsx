@@ -11,6 +11,7 @@ interface DocumentPreviewModalProps {
   mode: "internal" | "client";
   onClose: () => void;
   onUpdate: (doc: Document) => void;
+  onSignComplete?: () => void;
 }
 
 export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
@@ -19,6 +20,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   mode,
   onClose,
   onUpdate,
+  onSignComplete,
 }) => {
   const [localDoc, setLocalDoc] = useState(doc);
   const [viewMode, setViewMode] = useState<"internal" | "client">(mode);
@@ -76,15 +78,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     setLocalDoc(updated);
     onUpdate(updated);
     setSigning(false);
-
-    setTimeout(() => {
-      alert(
-        `Document signed successfully.\n\n` +
-        `System notification sent:\n` +
-        `- To Admin: Signature collected for "${localDoc.title}"\n` +
-        `- To Client: Copy of signed agreement attached.`,
-      );
-    }, 500);
+    onSignComplete?.();
   };
 
   const scrollToSignature = () => {

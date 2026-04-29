@@ -2,9 +2,11 @@
 
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { IntakeModal } from "../components/IntakeModal";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { useStore } from "../hooks/useStore";
 import { DocStatus, Document } from "../types";
 
@@ -39,10 +41,11 @@ const SummaryCard: React.FC<{
   </div>
 );
 
-const DocumentCard: React.FC<{ doc: Document }> = ({ doc }) => {
+const DocumentCard: React.FC<{ doc: Document; onDelete: (id: string) => void }> = ({ doc, onDelete }) => {
   const { templates } = useStore();
   const router = useRouter();
   const template = templates.find((item) => item.id === doc.templateId);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
@@ -71,17 +74,55 @@ const DocumentCard: React.FC<{ doc: Document }> = ({ doc }) => {
             />
           </svg>
         </div>
-        <Badge
-          color={
-            doc.status === DocStatus.APPROVED
-              ? "green"
-              : doc.status === DocStatus.REVIEW
-                ? "yellow"
-                : "gray"
-          }
-        >
-          {doc.status}
-        </Badge>
+
+        <div className="relative flex items-center gap-2">
+          <Badge
+            color={
+              doc.status === DocStatus.APPROVED
+                ? "green"
+                : doc.status === DocStatus.REVIEW
+                  ? "yellow"
+                  : "gray"
+            }
+          >
+            {doc.status}
+          </Badge>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" />
+            </svg>
+          </button>
+
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
+              <div className="absolute right-0 top-8 z-20 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); router.push(`/documents/${doc.id}`); }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(doc.id); }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <h3 className="mb-1 text-lg font-bold text-slate-900 transition-colors group-hover:text-blue-600">
@@ -91,20 +132,18 @@ const DocumentCard: React.FC<{ doc: Document }> = ({ doc }) => {
         {template?.name || "Document"}
       </p>
 
-      <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-400">
+      <div className="flex items-center border-t border-slate-100 pt-4 text-xs text-slate-400">
         <span>Updated {new Date(doc.updatedAt).toLocaleDateString()}</span>
-        <span className="flex items-center font-medium text-slate-600 transition-transform group-hover:translate-x-1">
-          Edit <span className="ml-1">-&gt;</span>
-        </span>
       </div>
     </div>
   );
 };
 
-const DocumentListItem: React.FC<{ doc: Document }> = ({ doc }) => {
+const DocumentListItem: React.FC<{ doc: Document; onDelete: (id: string) => void }> = ({ doc, onDelete }) => {
   const { templates } = useStore();
   const router = useRouter();
   const template = templates.find((item) => item.id === doc.templateId);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
@@ -119,18 +158,8 @@ const DocumentListItem: React.FC<{ doc: Document }> = ({ doc }) => {
               : "bg-blue-50 text-blue-600"
           }`}
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
         <div>
@@ -145,7 +174,7 @@ const DocumentListItem: React.FC<{ doc: Document }> = ({ doc }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
         <div className="hidden text-right sm:block">
           <p className="text-xs text-slate-400">Author</p>
           <p className="text-xs font-medium text-slate-700">Jane Doe</p>
@@ -161,20 +190,42 @@ const DocumentListItem: React.FC<{ doc: Document }> = ({ doc }) => {
         >
           {doc.status}
         </Badge>
-        <div className="text-slate-300">
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+
+        <div className="relative">
+          <button
+            onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+            className={`rounded-lg p-1.5 text-slate-400 transition-opacity hover:bg-slate-100 hover:text-slate-600 ${menuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+            </svg>
+          </button>
+
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
+              <div className="absolute right-0 top-8 z-20 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); router.push(`/documents/${doc.id}`); }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(doc.id); }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -182,7 +233,19 @@ const DocumentListItem: React.FC<{ doc: Document }> = ({ doc }) => {
 };
 
 export const DocumentList: React.FC = () => {
-  const { documents, paperDrafts } = useStore();
+  const { documents, paperDrafts, deleteDocument, clearPaperDraft } = useStore();
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const confirmDelete = () => {
+    if (!pendingDeleteId) return;
+    if (pendingDeleteId.startsWith('draft-')) {
+      clearPaperDraft(pendingDeleteId);
+    } else {
+      deleteDocument(pendingDeleteId);
+    }
+    toast.success('Document deleted');
+    setPendingDeleteId(null);
+  };
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [filterStatus, setFilterStatus] = useState<DocStatus | "All">("All");
   const [showIntake, setShowIntake] = useState(false);
@@ -357,9 +420,9 @@ export const DocumentList: React.FC = () => {
         >
           {filteredDocs.map((doc) =>
             viewMode === "grid" ? (
-              <DocumentCard key={doc.id} doc={doc} />
+              <DocumentCard key={doc.id} doc={doc} onDelete={setPendingDeleteId} />
             ) : (
-              <DocumentListItem key={doc.id} doc={doc} />
+              <DocumentListItem key={doc.id} doc={doc} onDelete={setPendingDeleteId} />
             ),
           )}
         </div>
@@ -377,6 +440,16 @@ export const DocumentList: React.FC = () => {
       )}
 
       {showIntake && <IntakeModal onClose={() => setShowIntake(false)} />}
+
+      <ConfirmModal
+        isOpen={!!pendingDeleteId}
+        onClose={() => setPendingDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Document"
+        message="This document will be permanently deleted. This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   );
 };

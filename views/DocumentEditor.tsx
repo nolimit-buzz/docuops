@@ -10,13 +10,14 @@ import { generateSectionContent } from '../services/geminiService';
 import { DocStatus, Document, DocumentSectionFeedback, TemplateSection, KnowledgeChunk, Comment, UserRole } from '../types';
 import { DocumentPreviewModal } from '../components/DocumentPreviewModal';
 import { createGeneratorPayload } from '../lib/payload-generator';
+import { createNewDocument } from '../query/documents';
 // --- Main Component ---
 
 export const DocumentEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { documents, updateDocument, addDocument, templates, knowledgeBase, user, paperDrafts, clearPaperDraft } = useStore();
+  const { documents, updateDocument, addDocument, templates, knowledgeBase, user, organization, paperDrafts, clearPaperDraft, loadDocuments } = useStore();
 
   const [doc, setDoc] = useState<Document | null>(null);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
@@ -40,10 +41,16 @@ export const DocumentEditor: React.FC = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
 
+  const normalizeDoc = (d: Document): Document => ({
+    ...d,
+    sections: Array.isArray(d.sections) ? d.sections : [],
+    collaborators: Array.isArray(d.collaborators) ? d.collaborators : [],
+  });
+
   useEffect(() => {
     const found = documents.find(d => d.id === id);
     if (found) {
-      setDoc(found);
+      setDoc(normalizeDoc(found));
       setTitle(found.title);
       return;
     }
@@ -321,6 +328,26 @@ export const DocumentEditor: React.FC = () => {
     setShowMentions(false);
   };
 
+  const handleSignComplete = async () => {
+    if (!doc) return;
+    try {
+      const realDoc = await createNewDocument({
+        templateId: doc.templateId,
+        companyId: organization.id,
+        createdBy: user.id,
+        title: doc.title,
+        projectContext: (doc.projectContext ?? {}) as Record<string, unknown>,
+        sections: doc.sections,
+        collaborators: {},
+      });
+      clearPaperDraft(doc.id);
+      await loadDocuments();
+      router.push(`/documents/${realDoc.id}`);
+    } catch (e) {
+      console.error('Failed to save signed document:', e);
+    }
+  };
+
   const handleInvite = () => {
     if (!inviteEmail.trim() || !doc) return;
     
@@ -332,7 +359,7 @@ export const DocumentEditor: React.FC = () => {
         avatar: `https://placehold.co/100x100?text=${inviteEmail.charAt(0).toUpperCase()}`
     };
 
-    const currentCollaborators = doc.collaborators || [];
+    const currentCollaborators = Array.isArray(doc.collaborators) ? doc.collaborators : [];
     const updatedDoc = { ...doc, collaborators: [...currentCollaborators, newCollaborator] };
     
     setDoc(updatedDoc);
@@ -345,7 +372,8 @@ export const DocumentEditor: React.FC = () => {
 
   const template = templates.find(t => t.id === doc.templateId);
   const projectContext = doc.projectContext;
-  const filteredCollaborators = (doc.collaborators || []).filter(c => 
+  const collaborators = Array.isArray(doc.collaborators) ? doc.collaborators : [];
+  const filteredCollaborators = collaborators.filter(c =>
       c.name.toLowerCase().includes(mentionQuery.toLowerCase())
   );
 
@@ -556,12 +584,12 @@ export const DocumentEditor: React.FC = () => {
                  {/* Current User */}
                  <img className="inline-block h-9 w-9 rounded-full ring-2 ring-white" src={user.avatar} alt={user.name} title={`${user.name} (You)`} />
                  {/* Other Collaborators */}
-                 {doc.collaborators?.slice(0, 4).map(c => (
+                 {collaborators.slice(0, 4).map(c => (
                      <img key={c.userId} className="inline-block h-9 w-9 rounded-full ring-2 ring-white" src={c.avatar} alt={c.name} title={c.name} />
                  ))}
-                 {(doc.collaborators?.length || 0) > 4 && (
+                 {collaborators.length > 4 && (
                      <div className="h-9 w-9 rounded-full ring-2 ring-white bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
-                         +{doc.collaborators!.length - 4}
+                         +{collaborators.length - 4}
                      </div>
                  )}
               </div>
@@ -671,15 +699,16 @@ export const DocumentEditor: React.FC = () => {
       {viewingSource && <SourceViewerModal source={viewingSource} onClose={() => setViewingSource(null)} />}
       
       {previewMode && template && (
-          <DocumentPreviewModal 
-              doc={doc} 
-              template={template} 
+          <DocumentPreviewModal
+              doc={doc}
+              template={template}
               mode={previewMode}
-              onClose={() => setPreviewMode(null)} 
+              onClose={() => setPreviewMode(null)}
               onUpdate={(updated) => {
                   setDoc(updated);
                   persistDoc(updated);
               }}
+              onSignComplete={handleSignComplete}
           />
       )}
     </div>

@@ -76,9 +76,9 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
   loadDocuments: async () => {
     const userId = get().user.id;
     if (!userId || userId === 'u-1') return;
-    const { fetchUserDocuments } = await import('../query/documents');
+    const { listDocuments } = await import('../query/documents');
     try {
-      const docs = await fetchUserDocuments();
+      const docs = await listDocuments();
       set({ documents: docs });
     } catch (e) {
       console.error('Failed to load documents:', e);
