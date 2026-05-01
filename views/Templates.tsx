@@ -7,18 +7,24 @@ import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { useStore } from "../hooks/useStore";
 import { DocumentTemplate, DocumentTemplateField, Template } from "../types";
-import { fetchDocumentTemplates } from "@/query/document-templates";
+import { fetchDocumentTemplates, deleteDocumentTemplate } from "@/query/document-templates";
 import { mapApiTemplateToLocal } from "@/lib/template-mapper";
 import { formatHumanDate } from "@/lib/utils";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
+import toast from "react-hot-toast";
 
 export const Templates: React.FC = () => {
-  const { templates, addTemplate, setTemplates } = useStore();
+  const { templates, addTemplate, setTemplates, deleteTemplate, documents } = useStore();
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [newTempName, setNewTempName] = useState("");
   const [newTempDesc, setNewTempDesc] = useState("");
   const [newTempCat, setNewTempCat] = useState("General");
   const [loading, setLoading] = useState(true);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
+  const [blockedDocCount, setBlockedDocCount] = useState(0);
 
   // Filter templates: only show those that are NOT in draft IF there's a corresponding API template?
   // Actually, we should just show the store's templates as the source of truth.
@@ -57,6 +63,26 @@ export const Templates: React.FC = () => {
       setLoading(false);
     });
   }, []);
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    setDeleteLoading(true);
+    try {
+      if (!pendingDeleteId.startsWith("t-")) {
+        await deleteDocumentTemplate(pendingDeleteId);
+      }
+      deleteTemplate(pendingDeleteId);
+      toast.success("Template deleted");
+      setPendingDeleteId(null);
+    } catch {
+      const count = documents.filter((d) => d.templateId === pendingDeleteId).length;
+      setPendingDeleteId(null);
+      setBlockedDocCount(count);
+      setShowBlockedModal(true);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const handleCreate = () => {
     if (!newTempName.trim()) {
@@ -154,21 +180,52 @@ export const Templates: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex justify-end rounded-b-xl border-t border-slate-100 bg-slate-50 p-4">
+              <div className="flex items-center justify-between rounded-b-xl border-t border-slate-100 bg-slate-50 px-4 py-3">
                 <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    router.push(`/templates/${template.id}`);
-                  }}
-                  className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
+                  onClick={(e) => { e.stopPropagation(); setPendingDeleteId(template.id); }}
+                  className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-600"
                 >
-                  Edit Structure <span className="ml-1">-&gt;</span>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); router.push(`/templates/${template.id}`); }}
+                  className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit
                 </button>
               </div>
             </Card>
           ))
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={!!pendingDeleteId}
+        onClose={() => setPendingDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Template"
+        message="This template will be permanently deleted. This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+        isLoading={deleteLoading}
+      />
+
+      <ConfirmModal
+        isOpen={showBlockedModal}
+        onClose={() => setShowBlockedModal(false)}
+        onConfirm={() => router.push("/documents")}
+        variant="warning"
+        title="This Template Is Still In Use"
+        message={`${blockedDocCount} document${blockedDocCount !== 1 ? "s are" : " is"} still using this template. You'll need to delete ${blockedDocCount !== 1 ? "them" : "it"} before you can remove the template.`}
+        confirmText="View Documents"
+        cancelText="Got it"
+      />
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
