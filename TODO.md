@@ -1,9 +1,13 @@
 # DocuOps Project TODO List
 
 ## 🎯 Active Tasks
+- [x] Separate Template Document Structure from Form Fields — Document Structure should only define the structural layout of the form, while Form Fields handles admin-defined custom data inputs based on document type
 - [ ] Integrate `IntakeModal` with the generator pipeline
 - [ ] Final UI/UX polish on the template builder sidebar and progress indicators
 - [ ] Cleanup: Remove debug payload logging from browser and server consoles
+
+## ✅ Completed (May 1, 2026)
+- [x] Separate Template Document Structure from Form Fields — `documentStructure` and `formFields` are now independent; store migration v2 handles legacy data
 
 ## ✅ Completed (April 29, 2026)
 - [x] Run load testing with multi-section templates

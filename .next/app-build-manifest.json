@@ -6,6 +6,11 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/(workspace)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -16,25 +21,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(workspace)/dashboard/page.js"
     ],
-    "/(workspace)/documents/page": [
+    "/(workspace)/templates/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(workspace)/documents/page.js"
+      "static/chunks/app/(workspace)/templates/page.js"
     ],
-    "/documents/[id]/page": [
+    "/(workspace)/templates/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/documents/[id]/page.js"
+      "static/chunks/app/(workspace)/templates/[id]/page.js"
     ],
     "/api/log-payload/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/log-payload/route.js"
     ],
-    "/(workspace)/templates/page": [
+    "/(workspace)/documents/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(workspace)/templates/page.js"
+      "static/chunks/app/(workspace)/documents/page.js"
     ]
   }
 }

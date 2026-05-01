@@ -5,7 +5,7 @@ import { Document, Template, GeneratorPayload, GeneratorSection, ProjectContext 
  * Maps current document state and template definitions into a single structure for CJ's endpoint.
  */
 export function createGeneratorPayload(doc: Document, template: Template): GeneratorPayload {
-  const sections: GeneratorSection[] = template.sections.map((ts) => {
+  const sections: GeneratorSection[] = (template.formFields ?? template.sections ?? []).map((ts) => {
     const docSection = doc.sections.find((s) => s.sectionId === ts.id);
     
     return {

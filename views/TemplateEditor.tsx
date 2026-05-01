@@ -7,9 +7,10 @@ import { Button } from "../components/ui/Button";
 import { ConfirmModal } from "../components/ui/ConfirmModal";
 import toast from "react-hot-toast";
 import { useStore } from "../hooks/useStore";
-import { Template, TemplateSection, TemplateSectionType } from "../types";
+import { DocumentSection, Template, TemplateSection, TemplateSectionType } from "../types";
 import { SidebarTabs, SidebarPanel, SidebarTab, TabSummaryBar } from "../components/editor/Sidebar";
 import { EditorBlock } from "../components/editor/EditorBlock";
+import { DocumentSectionCard } from "../components/editor/DocumentSectionCard";
 import { PropertiesPanel } from "../components/editor/PropertiesPanel";
 import { cn } from "@/lib/utils";
 import { fetchDocumentTemplateById, updateDocumentTemplate, deleteDocumentTemplate, createDocumentTemplate, fetchDocumentTemplates } from "@/query/document-templates";
@@ -53,10 +54,10 @@ export const TemplateEditor: React.FC = () => {
   }, [id, templates, addTemplate]);
 
   useEffect(() => {
-    if (activeTab === "sections" && template?.sections.length && !selectedSectionId) {
-      setSelectedSectionId(template.sections[0].id);
+    if (activeTab === "sections" && (template?.documentStructure ?? []).length && !selectedSectionId) {
+      setSelectedSectionId(template!.documentStructure[0].id);
     }
-  }, [activeTab, template?.sections, selectedSectionId]);
+  }, [activeTab, template?.documentStructure, selectedSectionId]);
 
   if (isLoading) {
     return (
@@ -87,103 +88,39 @@ export const TemplateEditor: React.FC = () => {
       toast.error("Invalid template ID. Cannot publish.");
       return;
     }
-    
+
     setIsLoading(true);
     try {
-      const isApiTemplate = template.id && !template.id.startsWith("t-");
       const payload = mapLocalTemplateToApiPayload(template);
-      
-      const companyId = organization.id?.length > 10 
-        ? organization.id 
-        : "00000000-0000-0000-0000-000000000001"; // Fallback to provided valid UUID
-      
-      let publishedTemplate: Template;
-      let finalId = template.id;
-      
-      // Determine if we should PATCH or POST
-      let shouldCreate = !isApiTemplate;
-      
-      if (shouldCreate) {
-        // Double check if a template with the same title already exists as an API template
-        const existingApiTemplate = templates.find(t => 
-          t.id && !t.id.startsWith("t-") && 
-          t.name?.toLowerCase() === template.name?.toLowerCase()
-        );
-        
-        if (existingApiTemplate) {
-          console.log("Found existing API template with same title. Switching to update mode.", existingApiTemplate.id);
-          finalId = existingApiTemplate.id;
-          shouldCreate = false;
-        }
-      }
 
-      if (!shouldCreate) {
-        // Update existing (PATCH)
-        await updateDocumentTemplate(finalId, payload);
-        publishedTemplate = {
-          ...template,
-          id: finalId, // Ensure we use the correct ID if we matched by name
-          isDraft: false,
-          updatedAt: new Date().toISOString(),
-        };
-        
-        // If the ID was local, we need to replace it in the store
-        if (template.id && template.id.startsWith("t-")) {
-          deleteTemplate(template.id);
-          addTemplate(publishedTemplate);
-        } else {
-          updateTemplate(publishedTemplate);
-        }
-        
-        setTemplate(publishedTemplate);
-        
-        // If we switched IDs, redirect to the new correct URL
-        if (template.id !== finalId) {
-          router.replace(`/templates/${finalId}`);
-        }
-      } else {
-        // Create new template (POST)
-        // We ensure company is strictly from organization.id
-        const apiResponse = await createDocumentTemplate({
-          title: template.name,
-          category: template.category,
-          description: template.description || "",
-          fields: payload.fields,
-          status: "active",
-          company: organization.id, 
-        });
-        
-        publishedTemplate = mapApiTemplateToLocal(apiResponse);
-        
-        // Replace the local template with the API one
-        deleteTemplate(template.id);
-        addTemplate(publishedTemplate);
-        setTemplate(publishedTemplate);
-        
-        // Redirect to the new API-backed URL
-        // router.replace(`/templates/${publishedTemplate.id}`);
-      }
+      // --- API publish temporarily disabled while new payload shape is validated ---
+      // await createDocumentTemplate(...) / updateDocumentTemplate(...)
+      // -----------------------------------------------------------------------------
 
-      // 1. Refetch the entire list from backend
-      const { docs } = await fetchDocumentTemplates();
-      const apiMapped = docs.map(mapApiTemplateToLocal);
-      
-      // 2. Remove the CURRENT local template from state (it's now in the API list)
-      // and keep other local drafts (starting with t- but NOT the current one)
-      setTemplates((prev) => {
-        const validPrev = Array.isArray(prev) ? prev.filter(t => t && t.id) : [];
-        const others = validPrev.filter(t => t.id !== template.id);
-        const localDrafts = others.filter(t => t.id && t.id.startsWith("t-"));
-        return [...localDrafts, ...apiMapped.filter(t => t && t.id)];
+      // Browser console
+      console.log("\n" + "=".repeat(50));
+      console.log("[DocuOps] TEMPLATE PUBLISH PAYLOAD (BROWSER)");
+      console.log("=".repeat(50));
+      console.log(JSON.stringify(payload, null, 2));
+      console.log("=".repeat(50) + "\n");
+
+      // Server console via log-payload route
+      await fetch("/api/log-payload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "template_publish",
+          templateId: template.id,
+          templateName: template.name,
+          documentStructure: payload.documentStructure,
+          formFields: payload.formFields,
+        }),
       });
 
-      toast.success("Template published correctly!");
-      
-      // 3. Redirect back to templates list as requested
-      router.push("/templates");
+      toast.success("Payload logged — check browser & server consoles");
     } catch (err) {
-      console.error("Failed to publish template:", err);
-      toast.error("Failed to publish template");
+      console.error("Failed to log payload:", err);
+      toast.error("Failed to log payload");
     } finally {
       setIsLoading(false);
     }
@@ -215,8 +152,8 @@ export const TemplateEditor: React.FC = () => {
     }
   };
 
-  const addElement = (type: TemplateSectionType) => {
-    const newSection: TemplateSection = {
+  const addFormField = (type: TemplateSectionType) => {
+    const newField: TemplateSection = {
       id: `s-${Date.now()}`,
       type,
       title: `New ${type.replace('_', ' ')}`,
@@ -224,50 +161,81 @@ export const TemplateEditor: React.FC = () => {
       required: true,
       options: type.includes('select') || type === 'input_dropdown' ? ["Option 1", "Option 2"] : undefined,
     };
-    
-    const newTemplate = {
+    const updated = {
       ...template,
-      sections: [...template.sections, newSection],
+      formFields: [...(template.formFields ?? []), newField],
       isDraft: true,
       updatedAt: new Date().toISOString(),
     };
-    
-    setTemplate(newTemplate);
-    updateTemplate(newTemplate);
+    setTemplate(updated);
+    updateTemplate(updated);
+    setSelectedSectionId(newField.id);
+  };
+
+  const removeFormField = (fieldId: string) => {
+    const updated = {
+      ...template,
+      formFields: (template.formFields ?? []).filter((s) => s.id !== fieldId),
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    updateTemplate(updated);
+    if (selectedSectionId === fieldId) setSelectedSectionId(null);
+  };
+
+  const updateFormField = (fieldId: string, updates: Partial<TemplateSection>, syncToStore = false) => {
+    const updated = {
+      ...template,
+      formFields: (template.formFields ?? []).map((s) => s.id === fieldId ? { ...s, ...updates } : s),
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    if (syncToStore) updateTemplate(updated);
+  };
+
+  const addDocumentSection = () => {
+    const newSection: DocumentSection = {
+      id: `ds-${Date.now()}`,
+      title: "New Section",
+    };
+    const updated = {
+      ...template,
+      documentStructure: [...(template.documentStructure ?? []), newSection],
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    updateTemplate(updated);
     setSelectedSectionId(newSection.id);
   };
 
-  const removeSection = (sectionId: string) => {
-    const newTemplate = {
+  const removeDocumentSection = (sectionId: string) => {
+    const updated = {
       ...template,
-      sections: template.sections.filter((s) => s.id !== sectionId),
-      isDraft: true, // Mark as draft on change
-      updatedAt: new Date().toISOString(),
-    };
-    setTemplate(newTemplate);
-    updateTemplate(newTemplate); // Sync to store
-    if (selectedSectionId === sectionId) {
-      setSelectedSectionId(null);
-    }
-  };
-
-  const updateSection = (sectionId: string, updates: Partial<TemplateSection>, syncToStore = false) => {
-    if (!template) return;
-    const newTemplate = {
-      ...template,
-      sections: template.sections.map((s) =>
-        s.id === sectionId ? { ...s, ...updates } : s
-      ),
+      documentStructure: (template.documentStructure ?? []).filter((s) => s.id !== sectionId),
       isDraft: true,
       updatedAt: new Date().toISOString(),
     };
-    setTemplate(newTemplate);
-    if (syncToStore) {
-      updateTemplate(newTemplate);
-    }
+    setTemplate(updated);
+    updateTemplate(updated);
+    if (selectedSectionId === sectionId) setSelectedSectionId(null);
   };
 
-  const selectedSection = template.sections.find(s => s.id === selectedSectionId) || null;
+  const updateDocumentSection = (sectionId: string, updates: Partial<DocumentSection>, syncToStore = false) => {
+    const updated = {
+      ...template,
+      documentStructure: (template.documentStructure ?? []).map((s) => s.id === sectionId ? { ...s, ...updates } : s),
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    if (syncToStore) updateTemplate(updated);
+  };
+
+  const selectedFormField = (template.formFields ?? []).find(s => s.id === selectedSectionId) || null;
+  const selectedDocSection = (template.documentStructure ?? []).find(s => s.id === selectedSectionId) || null;
 
   return (
     <div className="flex h-screen flex-col bg-slate-50/50">
@@ -321,7 +289,7 @@ export const TemplateEditor: React.FC = () => {
         name={template.name}
         description={template.description}
         category={template.category}
-        sectionCount={template.sections.length}
+        sectionCount={(template.documentStructure ?? []).length}
       />
 
       {/* Secondary Bar (Tabs - Full Width) */}
@@ -330,13 +298,14 @@ export const TemplateEditor: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Side Panel (Toolbox) */}
-        <SidebarPanel 
+        <SidebarPanel
           activeTab={activeTab}
           template={template}
           selectedSectionId={selectedSectionId}
           onUpdateTemplate={(updates) => setTemplate({ ...template, ...updates })}
-          onAddElement={addElement}
+          onAddElement={addFormField}
           onSelectSection={setSelectedSectionId}
+          onAddSection={addDocumentSection}
         />
 
         {/* Canvas (Center) */}
@@ -346,44 +315,54 @@ export const TemplateEditor: React.FC = () => {
         >
           <div className="mx-auto max-w-2xl space-y-6">
             {activeTab === "sections" ? (
-              selectedSectionId ? (
-                <EditorBlock
-                  key={selectedSectionId}
-                  section={template.sections.find(s => s.id === selectedSectionId)!}
-                  isSelected={true}
-                  isStructureView={true}
-                  onSelect={() => setSelectedSectionId(selectedSectionId)}
-                  onDelete={() => removeSection(selectedSectionId)}
-                  onUpdate={(updates) => updateSection(selectedSectionId, updates)}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="text-sm text-slate-400">Select a section from the outline to view it.</p>
-                </div>
-              )
+              <>
+                {(template.documentStructure ?? []).length > 0 ? (
+                  (template.documentStructure ?? []).map((section, index) => (
+                    <DocumentSectionCard
+                      key={section.id}
+                      section={section}
+                      index={index}
+                      isSelected={selectedSectionId === section.id}
+                      onSelect={() => setSelectedSectionId(section.id)}
+                      onDelete={() => removeDocumentSection(section.id)}
+                    />
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 py-20 text-center">
+                    <div className="mb-4 rounded-full bg-slate-100 p-4">
+                      <Send className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-800">No sections yet</h3>
+                    <p className="max-w-[240px] text-sm text-slate-400">
+                      Click "Add Section" in the outline panel to define your document structure.
+                    </p>
+                  </div>
+                )}
+              </>
             ) : (
-              template.sections.map((section) => (
-                <EditorBlock
-                  key={section.id}
-                  section={section}
-                  isSelected={selectedSectionId === section.id}
-                  onSelect={() => setSelectedSectionId(section.id)}
-                  onDelete={() => removeSection(section.id)}
-                  onUpdate={(updates) => updateSection(section.id, updates)}
-                />
-              ))
-            )}
-
-            {template.sections.length === 0 && (
-              <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 py-20 text-center">
-                <div className="mb-4 rounded-full bg-slate-100 p-4">
-                  <Send className="h-8 w-8 text-slate-300" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-800">Your canvas is empty</h3>
-                <p className="max-w-[240px] text-sm text-slate-400">
-                  Select an element from the "Form" tab to start building your template.
-                </p>
-              </div>
+              <>
+                {(template.formFields ?? []).map((field) => (
+                  <EditorBlock
+                    key={field.id}
+                    section={field}
+                    isSelected={selectedSectionId === field.id}
+                    onSelect={() => setSelectedSectionId(field.id)}
+                    onDelete={() => removeFormField(field.id)}
+                    onUpdate={(updates) => updateFormField(field.id, updates)}
+                  />
+                ))}
+                {(template.formFields ?? []).length === 0 && (
+                  <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 py-20 text-center">
+                    <div className="mb-4 rounded-full bg-slate-100 p-4">
+                      <Send className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-800">Your canvas is empty</h3>
+                    <p className="max-w-[240px] text-sm text-slate-400">
+                      Select an element from the Form Fields panel to start building your template.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
             <div className="h-32" />
           </div>
@@ -392,21 +371,30 @@ export const TemplateEditor: React.FC = () => {
         {/* Right Side Panel (Properties) */}
         <div className={cn(
           "transition-all duration-300 ease-in-out shrink-0 overflow-hidden border-l border-slate-200 bg-white",
-          selectedSectionId && activeTab !== "sections" ? "w-80" : "w-0"
+          selectedSectionId ? "w-80" : "w-0"
         )}>
           <PropertiesPanel
-            section={selectedSection}
+            section={selectedFormField}
+            documentSection={selectedDocSection}
             activeTab={activeTab}
-            onUpdate={(updates) => updateSection(selectedSectionId!, updates)}
+            onUpdate={(updates) => updateFormField(selectedSectionId!, updates)}
+            onUpdateDocumentSection={(updates) => updateDocumentSection(selectedSectionId!, updates)}
             onClose={() => {
-              updateSection(selectedSectionId!, {}, true); // Sync to store when closing/updating
+              if (activeTab === "sections") {
+                updateDocumentSection(selectedSectionId!, {}, true);
+              } else {
+                updateFormField(selectedSectionId!, {}, true);
+              }
               setSelectedSectionId(null);
-              toast.success("Field configuration updated", {
-                icon: "⚙️",
-                duration: 2000,
-              });
+              toast.success("Updated", { icon: "⚙️", duration: 2000 });
             }}
-            onDelete={() => removeSection(selectedSectionId!)}
+            onDelete={() => {
+              if (activeTab === "sections") {
+                removeDocumentSection(selectedSectionId!);
+              } else {
+                removeFormField(selectedSectionId!);
+              }
+            }}
           />
         </div>
       </div>

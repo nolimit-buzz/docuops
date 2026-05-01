@@ -70,12 +70,21 @@ export interface TemplateSection {
   config?: Record<string, any>; // For extra settings like font, color, etc.
 }
 
+export interface DocumentSection {
+  id: string;
+  title: string;
+  description?: string;
+  systemPrompt?: string;
+}
+
 export interface Template {
   id: string;
   name: string;
   description: string;
   category: string;
-  sections: TemplateSection[];
+  documentStructure: DocumentSection[];
+  formFields: TemplateSection[];
+  sections?: TemplateSection[]; // legacy — migration read-back only
   createdBy: string;
   updatedAt: string;
   isDraft?: boolean;

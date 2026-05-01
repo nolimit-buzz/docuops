@@ -221,8 +221,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
           <div className="space-y-10">
             {localDoc.sections.map((section, index) => {
-              const sectionDef = template.sections.find(
-                (item) => item.id === section.sectionId,
+              const sectionDef = (template.formFields ?? template.sections ?? []).find(
+                (item: any) => item.id === section.sectionId,
               );
               return (
                 <div key={section.sectionId} className="prose max-w-none">

@@ -128,7 +128,8 @@ export const DocumentEditor: React.FC = () => {
         const contextPayload = {
             project: doc.projectContext,
             inputs: doc.sections.reduce((acc, s) => {
-                const sectionDef = templates.find(t => t.id === doc.templateId)?.sections.find(ts => ts.id === s.sectionId);
+                const tmpl = templates.find(t => t.id === doc.templateId);
+                const sectionDef = (tmpl?.formFields ?? tmpl?.sections ?? []).find((ts: any) => ts.id === s.sectionId);
                 // Only include sections that are specifically structured inputs
                 if (sectionDef?.type.startsWith('input_')) {
                     acc[sectionDef.title] = s.content;
@@ -256,7 +257,7 @@ export const DocumentEditor: React.FC = () => {
     if (!doc || !template) return;
     
     // Find sections that are NOT input fields and are currently empty
-    const sectionsToGenerate = template.sections.filter(ts => {
+    const sectionsToGenerate = (template.formFields ?? template.sections ?? []).filter(ts => {
         const isInput = ts.type.startsWith('input_');
         const hasContent = doc.sections.some(ds => ds.sectionId === ts.id && ds.content.trim().length > 0);
         return !isInput && !hasContent;
@@ -424,7 +425,7 @@ export const DocumentEditor: React.FC = () => {
              {/* Document Outline */}
              {template && (
                 <DocumentOutline 
-                    sections={template.sections.map(s => ({ id: s.id, title: s.title }))}
+                    sections={(template.formFields ?? template.sections ?? []).map((s: any) => ({ id: s.id, title: s.title }))}
                     activeSectionId={activeSectionId}
                     onNavigate={handleScrollToSection}
                 />
@@ -453,7 +454,7 @@ export const DocumentEditor: React.FC = () => {
 
               {/* Sections */}
               <div className="space-y-12">
-                  {template?.sections.map((section, idx) => {
+                  {(template?.formFields ?? template?.sections ?? []).map((section: any, idx: number) => {
                       const docSection = doc.sections.find(s => s.sectionId === section.id);
                       const isActive = activeSectionId === section.id;
                       

@@ -108,12 +108,29 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
 }), {
   name: 'digicred-auth',
   partialize: (s) => ({ user: s.user, paperTypes: s.paperTypes, paperDrafts: s.paperDrafts, templates: s.templates }),
-  version: 1,
+  version: 2,
   migrate: (persistedState: any, version: number) => {
     if (version === 0) {
-      // Cleanup corrupt templates with no IDs
       if (persistedState && Array.isArray(persistedState.templates)) {
         persistedState.templates = persistedState.templates.filter((t: any) => t && t.id);
+      }
+    }
+    if (version <= 1) {
+      // Split legacy sections[] into documentStructure + formFields
+      if (persistedState && Array.isArray(persistedState.templates)) {
+        persistedState.templates = persistedState.templates.map((t: any) => {
+          if (!t) return t;
+          if (t.documentStructure || t.formFields) return t; // already migrated
+          const sections: any[] = Array.isArray(t.sections) ? t.sections : [];
+          return {
+            ...t,
+            formFields: sections.filter((s: any) => s?.type?.startsWith('input_')),
+            documentStructure: sections
+              .filter((s: any) => s && !s.type?.startsWith('input_'))
+              .map((s: any) => ({ id: s.id, title: s.title, description: s.description, systemPrompt: s.systemPrompt })),
+            sections: undefined,
+          };
+        });
       }
     }
     return persistedState;

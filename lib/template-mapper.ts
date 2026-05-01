@@ -1,17 +1,28 @@
-import { DocumentTemplate, DocumentTemplateField, Template, TemplateSection } from "@/types";
+import { DocumentSection, DocumentTemplate, DocumentTemplateField, Template, TemplateSection } from "@/types";
 
 export const mapApiTemplateToLocal = (apiTemplate: DocumentTemplate): Template => {
+  const allFields = Array.isArray(apiTemplate.fields) ? apiTemplate.fields : [];
+  const formFields = allFields
+    .filter((f) => f.type.startsWith("input_"))
+    .map((field, index) => mapApiFieldToSection(field, index));
+  const documentStructure: DocumentSection[] = allFields
+    .filter((f) => !f.type.startsWith("input_"))
+    .map((field, index) => ({
+      id: `s-api-struct-${index}-${Date.now()}`,
+      title: field.label,
+      systemPrompt: field.prompt || undefined,
+    }));
+
   return {
     id: apiTemplate.id || "",
     name: apiTemplate.title || "Untitled",
     description: apiTemplate.description,
     category: apiTemplate.category,
-    createdBy: apiTemplate.company, // Using company as creator for now
+    createdBy: apiTemplate.company,
     updatedAt: apiTemplate.updatedAt,
     isDraft: false,
-    sections: Array.isArray(apiTemplate.fields) 
-      ? apiTemplate.fields.map((field, index) => mapApiFieldToSection(field, index))
-      : [],
+    documentStructure,
+    formFields,
   };
 };
 
@@ -42,48 +53,33 @@ export const mapApiFieldToSection = (field: DocumentTemplateField, index: number
 };
 
 export const mapLocalTemplateToApiPayload = (t: Template) => {
+  const formFieldPayload = (t.formFields ?? []).map((s) => {
+    const base: any = {
+      label: s.title,
+      type: s.type,
+      prompt: s.systemPrompt || null,
+      required: s.required,
+      placeholder: s.placeholder ?? null,
+    };
+    if (s.type === "input_textarea") base.rows = s.config?.rows ?? null;
+    if (s.type === "input_number") {
+      base.min = s.config?.min ?? null;
+      base.max = s.config?.max ?? null;
+    }
+    if (["input_dropdown", "input_single_select", "input_multi_select"].includes(s.type)) {
+      base.options = s.options ?? [];
+    }
+    return base;
+  });
+
   return {
     title: t.name,
     category: t.category,
     description: t.description,
     status: "active",
-    fields: t.sections.map((s) => {
-      const isInput = s.type.startsWith("input_");
-      const base: any = {
-        label: s.title,
-        type: s.type,
-        prompt: s.systemPrompt || null,
-        required: s.required,
-      };
-      
-      if (!isInput) {
-        base.field_content = s.content ?? null;
-      } else {
-        base.placeholder = s.placeholder ?? null;
-      }
-
-      if (s.type === "heading") {
-        base.heading_level = s.config?.level ?? "h2";
-      }
-      
-      if (s.type === "text") {
-        base.variant = s.config?.variant ?? "body";
-      }
-
-      if (s.type === "input_textarea") {
-        base.rows = s.config?.rows ?? null;
-      }
-      
-      if (s.type === "input_number") {
-        base.min = s.config?.min ?? null;
-        base.max = s.config?.max ?? null;
-      }
-      
-      if (["input_dropdown", "input_single_select", "input_multi_select"].includes(s.type)) {
-        base.options = s.options ?? [];
-      }
-
-      return base;
-    }),
+    documentStructure: t.documentStructure ?? [],
+    formFields: t.formFields ?? [],
+    // combined fields array kept for future API integration
+    fields: formFieldPayload,
   };
 };

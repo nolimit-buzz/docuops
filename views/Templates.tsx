@@ -67,15 +67,8 @@ export const Templates: React.FC = () => {
       name: newTempName,
       description: newTempDesc,
       category: newTempCat,
-      sections: [
-        {
-          id: `s-${Date.now()}-1`,
-          type: "text",
-          title: "Introduction",
-          systemPrompt: "Write a brief introduction.",
-          required: true,
-        },
-      ],
+      documentStructure: [],
+      formFields: [],
       createdBy: "u-1",
       updatedAt: new Date().toISOString(),
     };
@@ -153,7 +146,7 @@ export const Templates: React.FC = () => {
                 </p>
 
                 <div className="flex items-center space-x-2 text-xs text-slate-400">
-                  <span>{template.sections.length} Sections</span>
+                  <span>{(template.documentStructure ?? template.sections ?? []).length} Sections</span>
                   <span>&middot;</span>
                   <span>
                     Updated {new Date(template.updatedAt).toLocaleDateString()}
