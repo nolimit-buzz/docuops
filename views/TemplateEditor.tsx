@@ -20,13 +20,15 @@ export const TemplateEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { templates, updateTemplate, addTemplate, deleteTemplate, setTemplates, organization } = useStore();
+  const { templates, documents, updateTemplate, addTemplate, deleteTemplate, setTemplates, organization } = useStore();
   
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<SidebarTab>("form");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
+  const [blockedDocCount, setBlockedDocCount] = useState(0);
 
   useEffect(() => {
     const found = templates.find((item) => item.id === id);
@@ -131,7 +133,15 @@ export const TemplateEditor: React.FC = () => {
       toast.error("Invalid template ID. Cannot delete.");
       return;
     }
-    
+
+    const linkedDocs = documents.filter((d) => d.templateId === template.id);
+    if (linkedDocs.length > 0) {
+      setBlockedDocCount(linkedDocs.length);
+      setShowBlockedModal(true);
+      setShowDeleteModal(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const isApiTemplate = template.id && !template.id.startsWith("t-");
@@ -143,9 +153,14 @@ export const TemplateEditor: React.FC = () => {
       deleteTemplate(template.id);
       toast.success("Template deleted");
       router.push("/templates");
-    } catch (err) {
+    } catch (err: any) {
+      const msg: string = err?.message ?? "";
+      if (msg.toLowerCase().includes("templateid") || msg.toLowerCase().includes("not-null")) {
+        setShowBlockedModal(true);
+      } else {
+        toast.error("Failed to delete template");
+      }
       console.error("Failed to delete template:", err);
-      toast.error("Failed to delete template");
     } finally {
       setIsLoading(false);
       setShowDeleteModal(false);
@@ -408,6 +423,17 @@ export const TemplateEditor: React.FC = () => {
         message="Are you sure you want to delete this template? This action will permanently remove it from your workspace and cannot be undone."
         confirmText="Permanently Delete"
         variant="danger"
+      />
+
+      <ConfirmModal
+        isOpen={showBlockedModal}
+        onClose={() => setShowBlockedModal(false)}
+        onConfirm={() => router.push("/documents")}
+        variant="warning"
+        title="This Template Is Still In Use"
+        message={`${blockedDocCount} document${blockedDocCount !== 1 ? "s are" : " is"} still using this template. You'll need to delete ${blockedDocCount !== 1 ? "them" : "it"} before you can remove the template.`}
+        confirmText="View Documents"
+        cancelText="Got it"
       />
     </div>
   );

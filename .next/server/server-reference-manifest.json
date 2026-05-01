@@ -21,6 +21,10 @@
         "app/(workspace)/documents/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%2C%5B%7B%22id%22%3A%22002f1ecc0eaf264f8b4556e2a253f2dcb854bd9984%22%2C%22exportedName%22%3A%22getPaperTypes%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%2C%5B%7B%22id%22%3A%227f5530e24b7e93a79907e5f2ba4bff7aad3047debe%22%2C%22exportedName%22%3A%22createNewDocument%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%2C%7B%22id%22%3A%227fa39c5b95036d9c151b93a6de5f5723e174d09b75%22%2C%22exportedName%22%3A%22listDocuments%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%2C%5B%7B%22id%22%3A%22007faf21bb62e13acafb6ee7cacc604fb3ce32746e%22%2C%22exportedName%22%3A%22logout%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%2C%7B%22id%22%3A%2240c7c0722dcea9d27969644aa39dc0c1cfea8d4849%22%2C%22exportedName%22%3A%22register%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%2C%7B%22id%22%3A%2260793173a3d690f56c530c7c5d96e201123c17df34%22%2C%22exportedName%22%3A%22login%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
+        },
+        "app/documents/[id]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%2C%5B%7B%22id%22%3A%22002f1ecc0eaf264f8b4556e2a253f2dcb854bd9984%22%2C%22exportedName%22%3A%22getPaperTypes%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%2C%5B%7B%22id%22%3A%227f5530e24b7e93a79907e5f2ba4bff7aad3047debe%22%2C%22exportedName%22%3A%22createNewDocument%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%2C%7B%22id%22%3A%227fa39c5b95036d9c151b93a6de5f5723e174d09b75%22%2C%22exportedName%22%3A%22listDocuments%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
         }
       },
       "layer": {
@@ -28,7 +32,8 @@
         "app/(workspace)/dashboard/page": "action-browser",
         "app/(workspace)/templates/page": "action-browser",
         "app/(workspace)/templates/[id]/page": "action-browser",
-        "app/(workspace)/documents/page": "action-browser"
+        "app/(workspace)/documents/page": "action-browser",
+        "app/documents/[id]/page": "action-browser"
       },
       "filename": "../C:\\Users\\Syntax\\Documents\\Projects\\docuops\\query\\paperTypes.ts",
       "exportedName": "getPaperTypes"
@@ -54,6 +59,10 @@
         "app/(workspace)/documents/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%2C%5B%7B%22id%22%3A%22002f1ecc0eaf264f8b4556e2a253f2dcb854bd9984%22%2C%22exportedName%22%3A%22getPaperTypes%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%2C%5B%7B%22id%22%3A%227f5530e24b7e93a79907e5f2ba4bff7aad3047debe%22%2C%22exportedName%22%3A%22createNewDocument%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%2C%7B%22id%22%3A%227fa39c5b95036d9c151b93a6de5f5723e174d09b75%22%2C%22exportedName%22%3A%22listDocuments%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%2C%5B%7B%22id%22%3A%22007faf21bb62e13acafb6ee7cacc604fb3ce32746e%22%2C%22exportedName%22%3A%22logout%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%2C%7B%22id%22%3A%2240c7c0722dcea9d27969644aa39dc0c1cfea8d4849%22%2C%22exportedName%22%3A%22register%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%2C%7B%22id%22%3A%2260793173a3d690f56c530c7c5d96e201123c17df34%22%2C%22exportedName%22%3A%22login%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
+        },
+        "app/documents/[id]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%2C%5B%7B%22id%22%3A%22002f1ecc0eaf264f8b4556e2a253f2dcb854bd9984%22%2C%22exportedName%22%3A%22getPaperTypes%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%2C%5B%7B%22id%22%3A%227f5530e24b7e93a79907e5f2ba4bff7aad3047debe%22%2C%22exportedName%22%3A%22createNewDocument%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%2C%7B%22id%22%3A%227fa39c5b95036d9c151b93a6de5f5723e174d09b75%22%2C%22exportedName%22%3A%22listDocuments%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
         }
       },
       "layer": {
@@ -61,7 +70,8 @@
         "app/(workspace)/dashboard/page": "action-browser",
         "app/(workspace)/templates/page": "action-browser",
         "app/(workspace)/templates/[id]/page": "action-browser",
-        "app/(workspace)/documents/page": "action-browser"
+        "app/(workspace)/documents/page": "action-browser",
+        "app/documents/[id]/page": "action-browser"
       },
       "filename": "../C:\\Users\\Syntax\\Documents\\Projects\\docuops\\query\\documents.ts",
       "exportedName": "createNewDocument"
@@ -87,6 +97,10 @@
         "app/(workspace)/documents/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%2C%5B%7B%22id%22%3A%22002f1ecc0eaf264f8b4556e2a253f2dcb854bd9984%22%2C%22exportedName%22%3A%22getPaperTypes%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%2C%5B%7B%22id%22%3A%227f5530e24b7e93a79907e5f2ba4bff7aad3047debe%22%2C%22exportedName%22%3A%22createNewDocument%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%2C%7B%22id%22%3A%227fa39c5b95036d9c151b93a6de5f5723e174d09b75%22%2C%22exportedName%22%3A%22listDocuments%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%2C%5B%7B%22id%22%3A%22007faf21bb62e13acafb6ee7cacc604fb3ce32746e%22%2C%22exportedName%22%3A%22logout%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%2C%7B%22id%22%3A%2240c7c0722dcea9d27969644aa39dc0c1cfea8d4849%22%2C%22exportedName%22%3A%22register%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%2C%7B%22id%22%3A%2260793173a3d690f56c530c7c5d96e201123c17df34%22%2C%22exportedName%22%3A%22login%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cauth.ts%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
+        },
+        "app/documents/[id]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%2C%5B%7B%22id%22%3A%22002f1ecc0eaf264f8b4556e2a253f2dcb854bd9984%22%2C%22exportedName%22%3A%22getPaperTypes%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5CpaperTypes.ts%22%7D%5D%5D%2C%5B%22C%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%2C%5B%7B%22id%22%3A%227f5530e24b7e93a79907e5f2ba4bff7aad3047debe%22%2C%22exportedName%22%3A%22createNewDocument%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%2C%7B%22id%22%3A%227fa39c5b95036d9c151b93a6de5f5723e174d09b75%22%2C%22exportedName%22%3A%22listDocuments%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CSyntax%5C%5CDocuments%5C%5CProjects%5C%5Cdocuops%5C%5Cquery%5C%5Cdocuments.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
         }
       },
       "layer": {
@@ -94,7 +108,8 @@
         "app/(workspace)/dashboard/page": "action-browser",
         "app/(workspace)/templates/page": "action-browser",
         "app/(workspace)/templates/[id]/page": "action-browser",
-        "app/(workspace)/documents/page": "action-browser"
+        "app/(workspace)/documents/page": "action-browser",
+        "app/documents/[id]/page": "action-browser"
       },
       "filename": "../C:\\Users\\Syntax\\Documents\\Projects\\docuops\\query\\documents.ts",
       "exportedName": "listDocuments"

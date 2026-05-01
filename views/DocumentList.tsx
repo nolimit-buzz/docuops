@@ -8,6 +8,7 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { useStore } from "../hooks/useStore";
+import { formatHumanDate } from "@/lib/utils";
 import { DocStatus, Document } from "../types";
 
 const SummaryCard: React.FC<{
@@ -133,7 +134,7 @@ const DocumentCard: React.FC<{ doc: Document; onDelete: (id: string) => void }> 
       </p>
 
       <div className="flex items-center border-t border-slate-100 pt-4 text-xs text-slate-400">
-        <span>Updated {new Date(doc.updatedAt).toLocaleDateString()}</span>
+        <span>Updated {formatHumanDate(doc.updatedAt)}</span>
       </div>
     </div>
   );
@@ -169,7 +170,7 @@ const DocumentListItem: React.FC<{ doc: Document; onDelete: (id: string) => void
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <span>{template?.name || "Document"}</span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <span>Updated {new Date(doc.updatedAt).toLocaleDateString()}</span>
+            <span>Updated {formatHumanDate(doc.updatedAt)}</span>
           </div>
         </div>
       </div>

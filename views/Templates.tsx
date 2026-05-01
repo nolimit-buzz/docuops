@@ -9,6 +9,7 @@ import { useStore } from "../hooks/useStore";
 import { DocumentTemplate, DocumentTemplateField, Template } from "../types";
 import { fetchDocumentTemplates } from "@/query/document-templates";
 import { mapApiTemplateToLocal } from "@/lib/template-mapper";
+import { formatHumanDate } from "@/lib/utils";
 
 export const Templates: React.FC = () => {
   const { templates, addTemplate, setTemplates } = useStore();
@@ -149,7 +150,7 @@ export const Templates: React.FC = () => {
                   <span>{(template.documentStructure ?? template.sections ?? []).length} Sections</span>
                   <span>&middot;</span>
                   <span>
-                    Updated {new Date(template.updatedAt).toLocaleDateString()}
+                    Updated {formatHumanDate(template.updatedAt)}
                   </span>
                 </div>
               </div>
