@@ -39,6 +39,8 @@ interface AppStore {
 
   addTemplate: (temp: Template) => void;
   updateTemplate: (temp: Template) => void;
+  deleteTemplate: (id: string) => void;
+  setTemplates: (templates: Template[] | ((prev: Template[]) => Template[])) => void;
 
   addKnowledge: (chunk: KnowledgeChunk) => void;
 
@@ -74,9 +76,9 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
   loadDocuments: async () => {
     const userId = get().user.id;
     if (!userId || userId === 'u-1') return;
-    const { fetchUserDocuments } = await import('../query/documents');
+    const { listDocuments } = await import('../query/documents');
     try {
-      const docs = await fetchUserDocuments();
+      const docs = await listDocuments();
       set({ documents: docs });
     } catch (e) {
       console.error('Failed to load documents:', e);
@@ -89,6 +91,8 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
 
   addTemplate: (temp) => set((s) => ({ templates: [temp, ...s.templates] })),
   updateTemplate: (temp) => set((s) => ({ templates: s.templates.map((t) => (t.id === temp.id ? temp : t)) })),
+  deleteTemplate: (id) => set((s) => ({ templates: s.templates.filter((t) => t.id !== id) })),
+  setTemplates: (temps) => set((s) => ({ templates: typeof temps === 'function' ? temps(s.templates) : temps })),
 
   addKnowledge: (chunk) => set((s) => ({ knowledgeBase: [chunk, ...s.knowledgeBase] })),
 
@@ -103,5 +107,32 @@ export const useStore = create<AppStore>()(persist((set, get) => ({
   },
 }), {
   name: 'digicred-auth',
-  partialize: (s) => ({ user: s.user, paperTypes: s.paperTypes, paperDrafts: s.paperDrafts }),
+  partialize: (s) => ({ user: s.user, paperTypes: s.paperTypes, paperDrafts: s.paperDrafts, templates: s.templates }),
+  version: 2,
+  migrate: (persistedState: any, version: number) => {
+    if (version === 0) {
+      if (persistedState && Array.isArray(persistedState.templates)) {
+        persistedState.templates = persistedState.templates.filter((t: any) => t && t.id);
+      }
+    }
+    if (version <= 1) {
+      // Split legacy sections[] into documentStructure + formFields
+      if (persistedState && Array.isArray(persistedState.templates)) {
+        persistedState.templates = persistedState.templates.map((t: any) => {
+          if (!t) return t;
+          if (t.documentStructure || t.formFields) return t; // already migrated
+          const sections: any[] = Array.isArray(t.sections) ? t.sections : [];
+          return {
+            ...t,
+            formFields: sections.filter((s: any) => s?.type?.startsWith('input_')),
+            documentStructure: sections
+              .filter((s: any) => s && !s.type?.startsWith('input_'))
+              .map((s: any) => ({ id: s.id, title: s.title, description: s.description, systemPrompt: s.systemPrompt })),
+            sections: undefined,
+          };
+        });
+      }
+    }
+    return persistedState;
+  },
 }));

@@ -9,13 +9,15 @@ import { DocumentOutline, SectionCard, SourceViewerModal, StatusStepper } from '
 import { generateSectionContent } from '../services/geminiService';
 import { DocStatus, Document, DocumentSectionFeedback, TemplateSection, KnowledgeChunk, Comment, UserRole } from '../types';
 import { DocumentPreviewModal } from '../components/DocumentPreviewModal';
+import { createGeneratorPayload } from '../lib/payload-generator';
+import { createNewDocument } from '../query/documents';
 // --- Main Component ---
 
 export const DocumentEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { documents, updateDocument, addDocument, templates, knowledgeBase, user, paperDrafts, clearPaperDraft } = useStore();
+  const { documents, updateDocument, addDocument, templates, knowledgeBase, user, organization, paperDrafts, clearPaperDraft, loadDocuments } = useStore();
 
   const [doc, setDoc] = useState<Document | null>(null);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
@@ -39,10 +41,16 @@ export const DocumentEditor: React.FC = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
 
+  const normalizeDoc = (d: Document): Document => ({
+    ...d,
+    sections: Array.isArray(d.sections) ? d.sections : [],
+    collaborators: Array.isArray(d.collaborators) ? d.collaborators : [],
+  });
+
   useEffect(() => {
     const found = documents.find(d => d.id === id);
     if (found) {
-      setDoc(found);
+      setDoc(normalizeDoc(found));
       setTitle(found.title);
       return;
     }
@@ -54,7 +62,7 @@ export const DocumentEditor: React.FC = () => {
       const newDoc: Document = {
         id,
         title: `${draft.paperTypeName} - ${draft.clientName}`,
-        templateId: 't-1',
+        templateId: draft.paperTypeId,
         status: DocStatus.DRAFT,
         organizationId: '',
         createdBy: user.id,
@@ -116,7 +124,21 @@ export const DocumentEditor: React.FC = () => {
             ? `${templateSection.systemPrompt}\n\nAdditional Instruction: ${customInstruction}`
             : templateSection.systemPrompt;
             
-        const userNotes = doc.projectContext ? JSON.stringify(doc.projectContext) : "";
+        // Include both project context AND any manual inputs from other sections as context
+        const contextPayload = {
+            project: doc.projectContext,
+            inputs: doc.sections.reduce((acc, s) => {
+                const tmpl = templates.find(t => t.id === doc.templateId);
+                const sectionDef = (tmpl?.formFields ?? tmpl?.sections ?? []).find((ts: any) => ts.id === s.sectionId);
+                // Only include sections that are specifically structured inputs
+                if (sectionDef?.type.startsWith('input_')) {
+                    acc[sectionDef.title] = s.content;
+                }
+                return acc;
+            }, {} as Record<string, string>)
+        };
+
+        const userNotes = JSON.stringify(contextPayload, null, 2);
         
         const result = await generateSectionContent(
             templateSection.title,
@@ -230,6 +252,26 @@ export const DocumentEditor: React.FC = () => {
       if (!magicPrompt.trim()) return;
       handleGenerate(sectionId, section, magicPrompt);
   };
+
+  const handleGenerateAll = async () => {
+    if (!doc || !template) return;
+    
+    // Find sections that are NOT input fields and are currently empty
+    const sectionsToGenerate = (template.formFields ?? template.sections ?? []).filter(ts => {
+        const isInput = ts.type.startsWith('input_');
+        const hasContent = doc.sections.some(ds => ds.sectionId === ts.id && ds.content.trim().length > 0);
+        return !isInput && !hasContent;
+    });
+
+    if (sectionsToGenerate.length === 0) {
+        alert("All sections already have content!");
+        return;
+    }
+
+    for (const section of sectionsToGenerate) {
+        await handleGenerate(section.id, section);
+    }
+  };
   
   const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
@@ -287,6 +329,26 @@ export const DocumentEditor: React.FC = () => {
     setShowMentions(false);
   };
 
+  const handleSignComplete = async () => {
+    if (!doc) return;
+    try {
+      const realDoc = await createNewDocument({
+        templateId: doc.templateId,
+        companyId: organization.id,
+        createdBy: user.id,
+        title: doc.title,
+        projectContext: (doc.projectContext ?? {}) as Record<string, unknown>,
+        sections: doc.sections,
+        collaborators: {},
+      });
+      clearPaperDraft(doc.id);
+      await loadDocuments();
+      router.push(`/documents/${realDoc.id}`);
+    } catch (e) {
+      console.error('Failed to save signed document:', e);
+    }
+  };
+
   const handleInvite = () => {
     if (!inviteEmail.trim() || !doc) return;
     
@@ -298,7 +360,7 @@ export const DocumentEditor: React.FC = () => {
         avatar: `https://placehold.co/100x100?text=${inviteEmail.charAt(0).toUpperCase()}`
     };
 
-    const currentCollaborators = doc.collaborators || [];
+    const currentCollaborators = Array.isArray(doc.collaborators) ? doc.collaborators : [];
     const updatedDoc = { ...doc, collaborators: [...currentCollaborators, newCollaborator] };
     
     setDoc(updatedDoc);
@@ -311,7 +373,8 @@ export const DocumentEditor: React.FC = () => {
 
   const template = templates.find(t => t.id === doc.templateId);
   const projectContext = doc.projectContext;
-  const filteredCollaborators = (doc.collaborators || []).filter(c => 
+  const collaborators = Array.isArray(doc.collaborators) ? doc.collaborators : [];
+  const filteredCollaborators = collaborators.filter(c =>
       c.name.toLowerCase().includes(mentionQuery.toLowerCase())
   );
 
@@ -362,7 +425,7 @@ export const DocumentEditor: React.FC = () => {
              {/* Document Outline */}
              {template && (
                 <DocumentOutline 
-                    sections={template.sections.map(s => ({ id: s.id, title: s.title }))}
+                    sections={(template.formFields ?? template.sections ?? []).map((s: any) => ({ id: s.id, title: s.title }))}
                     activeSectionId={activeSectionId}
                     onNavigate={handleScrollToSection}
                 />
@@ -391,7 +454,7 @@ export const DocumentEditor: React.FC = () => {
 
               {/* Sections */}
               <div className="space-y-12">
-                  {template?.sections.map((section, idx) => {
+                  {(template?.formFields ?? template?.sections ?? []).map((section: any, idx: number) => {
                       const docSection = doc.sections.find(s => s.sectionId === section.id);
                       const isActive = activeSectionId === section.id;
                       
@@ -434,10 +497,49 @@ export const DocumentEditor: React.FC = () => {
           <div className="p-6 border-b border-slate-100">
               <Button 
                 className="w-full h-12 text-base font-bold shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5"
-                onClick={() => setPreviewMode('client')}
+                onClick={async () => {
+                  if (doc && template) {
+                    const payload = createGeneratorPayload(doc, template);
+                    console.log("%c🚀 GENERATOR PAYLOAD CAPTURED", "color: #8b5cf6; font-weight: bold; font-size: 14px;");
+                    console.log(payload);
+
+                    // Send to server console
+                    try {
+                      await fetch('/api/log-payload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                      });
+                    } catch (e) {
+                      console.error("Failed to send payload to server console:", e);
+                    }
+                  }
+                  setPreviewMode('client');
+                }}
               >
                   {doc.status === DocStatus.APPROVED ? 'View Signed Document' : 'Review & Approve'}
               </Button>
+              
+              {!doc.status || doc.status === DocStatus.DRAFT && (
+                <Button 
+                  variant="outline"
+                  className="w-full h-12 text-sm font-bold mt-4 border-purple-200 text-purple-600 hover:bg-purple-50 transition-all shadow-sm"
+                  onClick={handleGenerateAll}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Generating Engine...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                       Generate Missing Sections
+                    </span>
+                  )}
+                </Button>
+              )}
               <p className="text-[11px] text-center text-slate-400 mt-3 font-medium">Finalize and lock document</p>
           </div>
 
@@ -483,12 +585,12 @@ export const DocumentEditor: React.FC = () => {
                  {/* Current User */}
                  <img className="inline-block h-9 w-9 rounded-full ring-2 ring-white" src={user.avatar} alt={user.name} title={`${user.name} (You)`} />
                  {/* Other Collaborators */}
-                 {doc.collaborators?.slice(0, 4).map(c => (
+                 {collaborators.slice(0, 4).map(c => (
                      <img key={c.userId} className="inline-block h-9 w-9 rounded-full ring-2 ring-white" src={c.avatar} alt={c.name} title={c.name} />
                  ))}
-                 {(doc.collaborators?.length || 0) > 4 && (
+                 {collaborators.length > 4 && (
                      <div className="h-9 w-9 rounded-full ring-2 ring-white bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
-                         +{doc.collaborators!.length - 4}
+                         +{collaborators.length - 4}
                      </div>
                  )}
               </div>
@@ -598,15 +700,16 @@ export const DocumentEditor: React.FC = () => {
       {viewingSource && <SourceViewerModal source={viewingSource} onClose={() => setViewingSource(null)} />}
       
       {previewMode && template && (
-          <DocumentPreviewModal 
-              doc={doc} 
-              template={template} 
+          <DocumentPreviewModal
+              doc={doc}
+              template={template}
               mode={previewMode}
-              onClose={() => setPreviewMode(null)} 
+              onClose={() => setPreviewMode(null)}
               onUpdate={(updated) => {
                   setDoc(updated);
                   persistDoc(updated);
               }}
+              onSignComplete={handleSignComplete}
           />
       )}
     </div>

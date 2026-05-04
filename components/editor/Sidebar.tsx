@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/Input";
-import { Template } from "@/types";
+import { DocumentSection, Template } from "@/types";
 
 export type SidebarTab = "form" | "sections" | "settings";
 
@@ -139,6 +139,7 @@ interface SidebarPanelProps {
   onUpdateTemplate: (updates: Partial<Template>) => void;
   onAddElement: (type: any) => void;
   onSelectSection: (id: string) => void;
+  onAddSection: () => void;
 }
 
 const ELEMENT_CATEGORIES = [
@@ -159,13 +160,14 @@ const ELEMENT_CATEGORIES = [
   },
 ];
 
-export const SidebarPanel: React.FC<SidebarPanelProps> = ({ 
-  activeTab, 
-  template, 
+export const SidebarPanel: React.FC<SidebarPanelProps> = ({
+  activeTab,
+  template,
   selectedSectionId,
-  onUpdateTemplate, 
+  onUpdateTemplate,
   onAddElement,
-  onSelectSection
+  onSelectSection,
+  onAddSection,
 }) => {
   const [searchTerm, setSearchTerm] = React.useState("");
 
@@ -220,9 +222,9 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Document Outline
           </h3>
-          {template.sections.length > 0 ? (
+          {(template.documentStructure ?? []).length > 0 ? (
             <div className="space-y-1">
-              {template.sections.map((section, index) => (
+              {(template.documentStructure ?? []).map((section, index) => (
                 <button
                   key={section.id}
                   onClick={() => onSelectSection(section.id)}
@@ -234,7 +236,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                   )}
                 >
                   <div className={cn(
-                    "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold transition-all",
+                    "flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] font-bold transition-all",
                     selectedSectionId === section.id
                       ? "bg-blue-600 text-white"
                       : "bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600"
@@ -248,21 +250,29 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                     )}>
                       {section.title || "Untitled Section"}
                     </p>
-                    <p className={cn(
-                      "truncate text-[10px] font-medium uppercase tracking-tight transition-colors",
-                      selectedSectionId === section.id ? "text-blue-500" : "text-slate-400"
-                    )}>
-                      {section.type?.replace('_', ' ') || "element"}
-                    </p>
+                    {section.description && (
+                      <p className={cn(
+                        "truncate text-[10px] transition-colors",
+                        selectedSectionId === section.id ? "text-blue-400" : "text-slate-400"
+                      )}>
+                        {section.description}
+                      </p>
+                    )}
                   </div>
                 </button>
               ))}
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
-              <p className="text-xs text-slate-400">No sections added yet.</p>
+              <p className="text-xs text-slate-400">No sections yet. Add one below.</p>
             </div>
           )}
+          <button
+            onClick={onAddSection}
+            className="flex w-full items-center justify-center space-x-2 rounded-xl border border-dashed border-slate-300 py-3 text-xs font-semibold text-slate-500 transition-all hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-600"
+          >
+            <span>+ Add Section</span>
+          </button>
         </div>
       )}
 

@@ -111,4 +111,18 @@ export const ENDPOINTS = {
   PAPER_TYPES: {
     LIST: '/paper_types',
   },
+  DOCUMENT_TEMPLATES: {
+    LIST: '/document_templates',
+    CREATE: '/document_templates',
+    GET: (id: string) => `/document_templates/${id}`,
+    UPDATE: (id: string) => `/document_templates/${id}`,
+    DELETE: (id: string) => `/document_templates/${id}`,
+  },
+  DOCUMENTS: {
+    LIST: '/documents',
+    CREATE: '/documents',
+    GET: (id: string) => `/documents/${id}`,
+    UPDATE: (id: string) => `/documents/${id}`,
+    DELETE: (id: string) => `/documents/${id}`,
+  },
 };

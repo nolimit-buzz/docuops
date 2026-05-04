@@ -6,6 +6,7 @@ import { IntakeModal } from "../components/IntakeModal";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { useStore } from "../hooks/useStore";
+import { formatHumanDate } from "@/lib/utils";
 import { DashboardStats } from "../components/dashboard/DashboardStats";
 import { DashboardCharts } from "../components/dashboard/DashboardCharts";
 import { getCompanyStats, type CompanyStats } from "../query/stats";
@@ -86,7 +87,7 @@ export function Dashboard() {
                   <div>
                     <p className="font-medium text-slate-900">{doc.title}</p>
                     <p className="text-xs text-slate-500">
-                      Edited {new Date(doc.updatedAt).toLocaleDateString()}
+                      Edited {formatHumanDate(doc.updatedAt)}
                     </p>
                   </div>
                 </div>

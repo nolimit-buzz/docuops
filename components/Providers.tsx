@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useStore } from "@/hooks/useStore";
+import { Toaster } from "react-hot-toast";
 
 function StoreHydrator() {
   const initFromSession = useStore((s) => s.initFromSession);
@@ -31,6 +32,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <>
       <StoreHydrator />
       <DocumentsHydrator />
+      <Toaster position="top-right" />
       {children}
     </>
   );

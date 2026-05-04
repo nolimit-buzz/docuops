@@ -9,40 +9,45 @@ import {
   AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TemplateSection } from "@/types";
+import { DocumentSection, TemplateSection } from "@/types";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { SidebarTab } from "./Sidebar";
 
 interface PropertiesPanelProps {
   section: TemplateSection | null;
+  documentSection: DocumentSection | null;
   activeTab?: SidebarTab;
   onUpdate: (updates: Partial<TemplateSection>) => void;
+  onUpdateDocumentSection: (updates: Partial<DocumentSection>) => void;
   onClose: () => void;
   onDelete: () => void;
 }
 
-export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ 
-  section, 
+export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
+  section,
+  documentSection,
   activeTab,
-  onUpdate, 
+  onUpdate,
+  onUpdateDocumentSection,
   onClose,
-  onDelete
+  onDelete,
 }) => {
-  if (!section) return null;
+  const hasContent = activeTab === "sections" ? !!documentSection : !!section;
+  if (!hasContent) return null;
 
   const handleOptionChange = (index: number, value: string) => {
-    const newOptions = [...(section.options || [])];
+    const newOptions = [...(section?.options || [])];
     newOptions[index] = value;
     onUpdate({ options: newOptions });
   };
 
   const addOption = () => {
-    onUpdate({ options: [...(section.options || []), `Option ${(section.options?.length || 0) + 1}`] });
+    onUpdate({ options: [...(section?.options || []), `Option ${(section?.options?.length || 0) + 1}`] });
   };
 
   const removeOption = (index: number) => {
-    const newOptions = section.options?.filter((_, i) => i !== index);
+    const newOptions = section?.options?.filter((_, i) => i !== index);
     onUpdate({ options: newOptions });
   };
 
@@ -52,9 +57,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       <div className="flex items-center justify-between border-b border-slate-200 p-4">
         <h3 className="flex items-center text-sm font-semibold text-slate-800">
           <Settings2 className="mr-2 h-4 w-4 text-blue-500" />
-          {activeTab === 'sections' ? 'Section Properties' : 'Field Options'}
+          {activeTab === "sections" ? "Section Properties" : "Field Options"}
         </h3>
-        <button 
+        <button
           onClick={onClose}
           className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
         >
@@ -65,8 +70,42 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-6">
           <div className="space-y-4">
-            {/* Element Specific Settings */}
-            {activeTab === 'form' && (
+            {/* Document Structure Section Properties */}
+            {activeTab === "sections" && documentSection && (
+              <>
+                <Input
+                  label="Section Name"
+                  value={documentSection.title}
+                  onChange={(e) => onUpdateDocumentSection({ title: e.target.value })}
+                />
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">Description</label>
+                  <textarea
+                    className="w-full rounded-lg border border-slate-200 p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300"
+                    rows={3}
+                    placeholder="Briefly describe what this section covers..."
+                    value={documentSection.description || ""}
+                    onChange={(e) => onUpdateDocumentSection({ description: e.target.value })}
+                  />
+                </div>
+                <div className="rounded-xl bg-blue-50/50 p-4 border border-blue-50">
+                  <h4 className="mb-3 flex items-center text-xs font-bold uppercase tracking-wider text-blue-600">
+                    <AlertCircle className="mr-2 h-3.5 w-3.5" />
+                    AI Instruction
+                  </h4>
+                  <textarea
+                    className="w-full rounded-lg border border-blue-100 bg-white p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/10 font-mono"
+                    rows={4}
+                    placeholder="Tell the AI how to generate content for this section..."
+                    value={documentSection.systemPrompt || ""}
+                    onChange={(e) => onUpdateDocumentSection({ systemPrompt: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Form Field Settings */}
+            {activeTab === "form" && section && (
               <>
                 {section.type === "heading" && (
                   <div className="space-y-2">
@@ -214,49 +253,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               </>
             )}
 
-            {/* Document Structure Settings */}
-            {activeTab === 'sections' && (
-              <Input
-                label="Section Name"
-                value={section.title}
-                onChange={(e) => onUpdate({ title: e.target.value })}
-              />
-            )}
           </div>
-
-          {/* AI Settings */}
-          {activeTab === "settings" && (
-            <div className="rounded-xl bg-blue-50/50 p-4 border border-blue-50">
-            <h4 className="mb-3 flex items-center text-xs font-bold uppercase tracking-wider text-blue-600">
-              <AlertCircle className="mr-2 h-3.5 w-3.5" />
-              AI Behavior
-            </h4>
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1 block text-[10px] font-medium text-blue-700 uppercase tracking-tight">System Prompt</label>
-                <textarea
-                  className="w-full rounded-lg border border-blue-100 bg-white p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/10 font-mono"
-                  rows={4}
-                  placeholder="Instructions for the AI..."
-                  value={section.systemPrompt}
-                  onChange={(e) => onUpdate({ systemPrompt: e.target.value })}
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="required-toggle"
-                  className="h-4 w-4 rounded border-blue-200 text-blue-600"
-                  checked={section.required}
-                  onChange={(e) => onUpdate({ required: e.target.checked })}
-                />
-                <label htmlFor="required-toggle" className="ml-2 text-xs font-medium text-blue-800">
-                  Required Section
-                </label>
-              </div>
-            </div>
-          </div>
-          )}
         </div>
       </div>
 

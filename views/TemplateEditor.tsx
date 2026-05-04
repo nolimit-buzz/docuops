@@ -2,39 +2,64 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, Eye, Save, Send } from "lucide-react";
+import { ChevronLeft, Eye, Save, Send, Trash2 } from "lucide-react";
 import { Button } from "../components/ui/Button";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
+import toast from "react-hot-toast";
 import { useStore } from "../hooks/useStore";
-import { Template, TemplateSection, TemplateSectionType } from "../types";
+import { DocumentSection, Template, TemplateSection, TemplateSectionType } from "../types";
 import { SidebarTabs, SidebarPanel, SidebarTab, TabSummaryBar } from "../components/editor/Sidebar";
 import { EditorBlock } from "../components/editor/EditorBlock";
+import { DocumentSectionCard } from "../components/editor/DocumentSectionCard";
 import { PropertiesPanel } from "../components/editor/PropertiesPanel";
 import { cn } from "@/lib/utils";
+import { fetchDocumentTemplateById, updateDocumentTemplate, deleteDocumentTemplate, createDocumentTemplate, fetchDocumentTemplates } from "@/query/document-templates";
+import { mapApiTemplateToLocal, mapLocalTemplateToApiPayload } from "@/lib/template-mapper";
 
 export const TemplateEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { templates, updateTemplate } = useStore();
+  const { templates, documents, updateTemplate, addTemplate, deleteTemplate, setTemplates, organization } = useStore();
   
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<SidebarTab>("form");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
+  const [blockedDocCount, setBlockedDocCount] = useState(0);
 
   useEffect(() => {
     const found = templates.find((item) => item.id === id);
     if (found) {
       setTemplate(JSON.parse(JSON.stringify(found)) as Template);
+      setIsLoading(false);
+    } else if (id) {
+      // Try fetching from API
+      setIsLoading(true);
+      fetchDocumentTemplateById(id)
+        .then((apiTemp) => {
+          const mapped = mapApiTemplateToLocal(apiTemp);
+          setTemplate(mapped);
+          addTemplate(mapped); // Save to store as requested
+        })
+        .catch((err) => {
+          console.error("Failed to fetch template:", err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [id, templates]);
+  }, [id, templates, addTemplate]);
 
   useEffect(() => {
-    if (activeTab === "sections" && template?.sections.length && !selectedSectionId) {
-      setSelectedSectionId(template.sections[0].id);
+    if (activeTab === "sections" && (template?.documentStructure ?? []).length && !selectedSectionId) {
+      setSelectedSectionId(template!.documentStructure[0].id);
     }
-  }, [activeTab, template?.sections, selectedSectionId]);
+  }, [activeTab, template?.documentStructure, selectedSectionId]);
 
   if (isLoading) {
     return (
@@ -48,49 +73,102 @@ export const TemplateEditor: React.FC = () => {
     return <div className="p-10 text-center">Template not found.</div>;
   }
 
-  const buildPayload = (t: Template) => ({
-    title: t.name,
-    category: t.category,
-    description: t.description,
-    fields: t.sections.map((s) => {
-      const isInput = s.type.startsWith("input_");
-      const base = {
-        label: s.title,
-        type: s.type,
-        prompt: s.systemPrompt || null,
-        required: s.required,
-        ...(isInput ? {} : { field_content: s.content ?? null }),
-      };
-      if (s.type === "heading")
-        return { ...base, heading_level: s.config?.level ?? "h2" };
-      if (s.type === "text")
-        return { ...base, variant: s.config?.variant ?? "body" };
-      if (isInput) {
-        const inputBase = { ...base, placeholder: s.placeholder ?? null };
-        if (s.type === "input_textarea")
-          return { ...inputBase, rows: s.config?.rows ?? null };
-        if (s.type === "input_number")
-          return { ...inputBase, min: s.config?.min ?? null, max: s.config?.max ?? null };
-        if (["input_dropdown", "input_single_select", "input_multi_select"].includes(s.type))
-          return { ...inputBase, options: s.options ?? [] };
-        return inputBase;
-      }
-      return base;
-    }),
-  });
-
-  const handleSave = () => {
-    if (!template) return;
-    const payload = buildPayload(template);
-    console.log("Template Payload:", JSON.stringify(payload, null, 2));
-    updateTemplate({
+  const handleSave = async () => {
+    const updatedTemplate: Template = {
       ...template,
+      isDraft: true,
       updatedAt: new Date().toISOString(),
-    });
+    };
+    
+    updateTemplate(updatedTemplate);
+    setTemplate(updatedTemplate);
+    toast.success("Draft saved successfully");
   };
 
-  const addElement = (type: TemplateSectionType) => {
-    const newSection: TemplateSection = {
+  const handlePublish = async () => {
+    if (!template || !id || id === "undefined" || template.id === "undefined") {
+      toast.error("Invalid template ID. Cannot publish.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const payload = mapLocalTemplateToApiPayload(template);
+
+      // --- API publish temporarily disabled while new payload shape is validated ---
+      // await createDocumentTemplate(...) / updateDocumentTemplate(...)
+      // -----------------------------------------------------------------------------
+
+      // Browser console
+      console.log("\n" + "=".repeat(50));
+      console.log("[DocuOps] TEMPLATE PUBLISH PAYLOAD (BROWSER)");
+      console.log("=".repeat(50));
+      console.log(JSON.stringify(payload, null, 2));
+      console.log("=".repeat(50) + "\n");
+
+      // Server console via log-payload route
+      await fetch("/api/log-payload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "template_publish",
+          templateId: template.id,
+          templateName: template.name,
+          documentStructure: payload.documentStructure,
+          formFields: payload.formFields,
+        }),
+      });
+
+      toast.success("Payload logged — check browser & server consoles");
+    } catch (err) {
+      console.error("Failed to log payload:", err);
+      toast.error("Failed to log payload");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteTemplate = async () => {
+    if (!template || !id || id === "undefined" || template.id === "undefined") {
+      toast.error("Invalid template ID. Cannot delete.");
+      return;
+    }
+
+    const linkedDocs = documents.filter((d) => d.templateId === template.id);
+    if (linkedDocs.length > 0) {
+      setBlockedDocCount(linkedDocs.length);
+      setShowBlockedModal(true);
+      setShowDeleteModal(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const isApiTemplate = template.id && !template.id.startsWith("t-");
+      
+      if (isApiTemplate) {
+        await deleteDocumentTemplate(template.id);
+      }
+      
+      deleteTemplate(template.id);
+      toast.success("Template deleted");
+      router.push("/templates");
+    } catch (err: any) {
+      const msg: string = err?.message ?? "";
+      if (msg.toLowerCase().includes("templateid") || msg.toLowerCase().includes("not-null")) {
+        setShowBlockedModal(true);
+      } else {
+        toast.error("Failed to delete template");
+      }
+      console.error("Failed to delete template:", err);
+    } finally {
+      setIsLoading(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  const addFormField = (type: TemplateSectionType) => {
+    const newField: TemplateSection = {
       id: `s-${Date.now()}`,
       type,
       title: `New ${type.replace('_', ' ')}`,
@@ -98,34 +176,81 @@ export const TemplateEditor: React.FC = () => {
       required: true,
       options: type.includes('select') || type === 'input_dropdown' ? ["Option 1", "Option 2"] : undefined,
     };
-    
-    setTemplate({
+    const updated = {
       ...template,
-      sections: [...template.sections, newSection],
-    });
+      formFields: [...(template.formFields ?? []), newField],
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    updateTemplate(updated);
+    setSelectedSectionId(newField.id);
+  };
+
+  const removeFormField = (fieldId: string) => {
+    const updated = {
+      ...template,
+      formFields: (template.formFields ?? []).filter((s) => s.id !== fieldId),
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    updateTemplate(updated);
+    if (selectedSectionId === fieldId) setSelectedSectionId(null);
+  };
+
+  const updateFormField = (fieldId: string, updates: Partial<TemplateSection>, syncToStore = false) => {
+    const updated = {
+      ...template,
+      formFields: (template.formFields ?? []).map((s) => s.id === fieldId ? { ...s, ...updates } : s),
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    if (syncToStore) updateTemplate(updated);
+  };
+
+  const addDocumentSection = () => {
+    const newSection: DocumentSection = {
+      id: `ds-${Date.now()}`,
+      title: "New Section",
+    };
+    const updated = {
+      ...template,
+      documentStructure: [...(template.documentStructure ?? []), newSection],
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    updateTemplate(updated);
     setSelectedSectionId(newSection.id);
   };
 
-  const removeSection = (sectionId: string) => {
-    setTemplate({
+  const removeDocumentSection = (sectionId: string) => {
+    const updated = {
       ...template,
-      sections: template.sections.filter((s) => s.id !== sectionId),
-    });
-    if (selectedSectionId === sectionId) {
-      setSelectedSectionId(null);
-    }
+      documentStructure: (template.documentStructure ?? []).filter((s) => s.id !== sectionId),
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    updateTemplate(updated);
+    if (selectedSectionId === sectionId) setSelectedSectionId(null);
   };
 
-  const updateSection = (sectionId: string, updates: Partial<TemplateSection>) => {
-    setTemplate({
+  const updateDocumentSection = (sectionId: string, updates: Partial<DocumentSection>, syncToStore = false) => {
+    const updated = {
       ...template,
-      sections: template.sections.map((s) =>
-        s.id === sectionId ? { ...s, ...updates } : s
-      ),
-    });
+      documentStructure: (template.documentStructure ?? []).map((s) => s.id === sectionId ? { ...s, ...updates } : s),
+      isDraft: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setTemplate(updated);
+    if (syncToStore) updateTemplate(updated);
   };
 
-  const selectedSection = template.sections.find(s => s.id === selectedSectionId) || null;
+  const selectedFormField = (template.formFields ?? []).find(s => s.id === selectedSectionId) || null;
+  const selectedDocSection = (template.documentStructure ?? []).find(s => s.id === selectedSectionId) || null;
 
   return (
     <div className="flex h-screen flex-col bg-slate-50/50">
@@ -145,9 +270,14 @@ export const TemplateEditor: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="sm" className="text-slate-600 hover:bg-slate-50">
-            <Eye className="mr-2 h-4 w-4" />
-            Preview
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowDeleteModal(true)}
+            className="text-red-500 hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
           </Button>
           <Button 
             variant="outline" 
@@ -158,7 +288,11 @@ export const TemplateEditor: React.FC = () => {
             <Save className="mr-2 h-4 w-4" />
             Save
           </Button>
-          <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 shadow-sm shadow-slate-200">
+          <Button 
+            size="sm" 
+            onClick={handlePublish}
+            className="bg-slate-900 text-white hover:bg-slate-800 shadow-sm shadow-slate-200"
+          >
             <Send className="mr-2 h-4 w-4" />
             Publish
           </Button>
@@ -170,7 +304,7 @@ export const TemplateEditor: React.FC = () => {
         name={template.name}
         description={template.description}
         category={template.category}
-        sectionCount={template.sections.length}
+        sectionCount={(template.documentStructure ?? []).length}
       />
 
       {/* Secondary Bar (Tabs - Full Width) */}
@@ -179,13 +313,14 @@ export const TemplateEditor: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Side Panel (Toolbox) */}
-        <SidebarPanel 
+        <SidebarPanel
           activeTab={activeTab}
           template={template}
           selectedSectionId={selectedSectionId}
           onUpdateTemplate={(updates) => setTemplate({ ...template, ...updates })}
-          onAddElement={addElement}
+          onAddElement={addFormField}
           onSelectSection={setSelectedSectionId}
+          onAddSection={addDocumentSection}
         />
 
         {/* Canvas (Center) */}
@@ -195,44 +330,54 @@ export const TemplateEditor: React.FC = () => {
         >
           <div className="mx-auto max-w-2xl space-y-6">
             {activeTab === "sections" ? (
-              selectedSectionId ? (
-                <EditorBlock
-                  key={selectedSectionId}
-                  section={template.sections.find(s => s.id === selectedSectionId)!}
-                  isSelected={true}
-                  isStructureView={true}
-                  onSelect={() => setSelectedSectionId(selectedSectionId)}
-                  onDelete={() => removeSection(selectedSectionId)}
-                  onUpdate={(updates) => updateSection(selectedSectionId, updates)}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="text-sm text-slate-400">Select a section from the outline to view it.</p>
-                </div>
-              )
+              <>
+                {(template.documentStructure ?? []).length > 0 ? (
+                  (template.documentStructure ?? []).map((section, index) => (
+                    <DocumentSectionCard
+                      key={section.id}
+                      section={section}
+                      index={index}
+                      isSelected={selectedSectionId === section.id}
+                      onSelect={() => setSelectedSectionId(section.id)}
+                      onDelete={() => removeDocumentSection(section.id)}
+                    />
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 py-20 text-center">
+                    <div className="mb-4 rounded-full bg-slate-100 p-4">
+                      <Send className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-800">No sections yet</h3>
+                    <p className="max-w-[240px] text-sm text-slate-400">
+                      Click "Add Section" in the outline panel to define your document structure.
+                    </p>
+                  </div>
+                )}
+              </>
             ) : (
-              template.sections.map((section) => (
-                <EditorBlock
-                  key={section.id}
-                  section={section}
-                  isSelected={selectedSectionId === section.id}
-                  onSelect={() => setSelectedSectionId(section.id)}
-                  onDelete={() => removeSection(section.id)}
-                  onUpdate={(updates) => updateSection(section.id, updates)}
-                />
-              ))
-            )}
-
-            {template.sections.length === 0 && (
-              <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 py-20 text-center">
-                <div className="mb-4 rounded-full bg-slate-100 p-4">
-                  <Send className="h-8 w-8 text-slate-300" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-800">Your canvas is empty</h3>
-                <p className="max-w-[240px] text-sm text-slate-400">
-                  Select an element from the "Form" tab to start building your template.
-                </p>
-              </div>
+              <>
+                {(template.formFields ?? []).map((field) => (
+                  <EditorBlock
+                    key={field.id}
+                    section={field}
+                    isSelected={selectedSectionId === field.id}
+                    onSelect={() => setSelectedSectionId(field.id)}
+                    onDelete={() => removeFormField(field.id)}
+                    onUpdate={(updates) => updateFormField(field.id, updates)}
+                  />
+                ))}
+                {(template.formFields ?? []).length === 0 && (
+                  <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 py-20 text-center">
+                    <div className="mb-4 rounded-full bg-slate-100 p-4">
+                      <Send className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-800">Your canvas is empty</h3>
+                    <p className="max-w-[240px] text-sm text-slate-400">
+                      Select an element from the Form Fields panel to start building your template.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
             <div className="h-32" />
           </div>
@@ -241,17 +386,55 @@ export const TemplateEditor: React.FC = () => {
         {/* Right Side Panel (Properties) */}
         <div className={cn(
           "transition-all duration-300 ease-in-out shrink-0 overflow-hidden border-l border-slate-200 bg-white",
-          selectedSectionId && activeTab !== "sections" ? "w-80" : "w-0"
+          selectedSectionId ? "w-80" : "w-0"
         )}>
           <PropertiesPanel
-            section={selectedSection}
+            section={selectedFormField}
+            documentSection={selectedDocSection}
             activeTab={activeTab}
-            onUpdate={(updates) => updateSection(selectedSectionId!, updates)}
-            onClose={() => setSelectedSectionId(null)}
-            onDelete={() => removeSection(selectedSectionId!)}
+            onUpdate={(updates) => updateFormField(selectedSectionId!, updates)}
+            onUpdateDocumentSection={(updates) => updateDocumentSection(selectedSectionId!, updates)}
+            onClose={() => {
+              if (activeTab === "sections") {
+                updateDocumentSection(selectedSectionId!, {}, true);
+              } else {
+                updateFormField(selectedSectionId!, {}, true);
+              }
+              setSelectedSectionId(null);
+              toast.success("Updated", { icon: "⚙️", duration: 2000 });
+            }}
+            onDelete={() => {
+              if (activeTab === "sections") {
+                removeDocumentSection(selectedSectionId!);
+              } else {
+                removeFormField(selectedSectionId!);
+              }
+            }}
           />
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteTemplate}
+        isLoading={isLoading}
+        title="Delete Template"
+        message="Are you sure you want to delete this template? This action will permanently remove it from your workspace and cannot be undone."
+        confirmText="Permanently Delete"
+        variant="danger"
+      />
+
+      <ConfirmModal
+        isOpen={showBlockedModal}
+        onClose={() => setShowBlockedModal(false)}
+        onConfirm={() => router.push("/documents")}
+        variant="warning"
+        title="This Template Is Still In Use"
+        message={`${blockedDocCount} document${blockedDocCount !== 1 ? "s are" : " is"} still using this template. You'll need to delete ${blockedDocCount !== 1 ? "them" : "it"} before you can remove the template.`}
+        confirmText="View Documents"
+        cancelText="Got it"
+      />
     </div>
   );
 };
