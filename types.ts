@@ -53,8 +53,9 @@ export type TemplateSectionType =
   | 'input_dropdown' 
   | 'input_single_select' 
   | 'input_multi_select' 
-  | 'input_date_picker' 
-  | 'input_date_time';
+  | 'input_date_picker'
+  | 'input_date_time'
+  | 'input_file';
 
 export interface TemplateSection {
   id: string;
@@ -100,6 +101,8 @@ export interface DocumentTemplateField {
   heading_level?: string;
   options?: string[];
   rows?: number | null;
+  accept?: string | null;
+  multiple?: boolean | null;
 }
 
 export interface DocumentTemplate {

@@ -27,8 +27,6 @@ export const mapApiTemplateToLocal = (apiTemplate: DocumentTemplate): Template =
 };
 
 export const mapApiFieldToSection = (field: DocumentTemplateField, index: number): TemplateSection => {
-  const isInput = field.type.startsWith("input_");
-  
   const section: TemplateSection = {
     id: `s-api-${index}-${Date.now()}`,
     type: field.type,
@@ -47,6 +45,14 @@ export const mapApiFieldToSection = (field: DocumentTemplateField, index: number
   
   if (field.rows) {
     section.config = { ...section.config, rows: field.rows };
+  }
+
+  if (field.accept) {
+    section.config = { ...section.config, accept: field.accept };
+  }
+
+  if (field.multiple != null) {
+    section.config = { ...section.config, multiple: field.multiple };
   }
 
   return section;
@@ -68,6 +74,10 @@ export const mapLocalTemplateToApiPayload = (t: Template) => {
     }
     if (["input_dropdown", "input_single_select", "input_multi_select"].includes(s.type)) {
       base.options = s.options ?? [];
+    }
+    if (s.type === "input_file") {
+      base.accept = s.config?.accept ?? null;
+      base.multiple = s.config?.multiple ?? false;
     }
     return base;
   });

@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Calendar,
   Clock,
+  Paperclip,
   Search,
   Settings,
   Library,
@@ -156,6 +157,7 @@ const ELEMENT_CATEGORIES = [
       { type: "input_multi_select", label: "Input Multi-Select", icon: ChevronDown },
       { type: "input_date_picker", label: "Input Date Picker", icon: Calendar },
       { type: "input_date_time", label: "Input Date & Time", icon: Clock },
+      { type: "input_file", label: "File Upload", icon: Paperclip },
     ],
   },
 ];

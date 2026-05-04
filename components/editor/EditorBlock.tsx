@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import * as LucideIcons from "lucide-react";
 import { 
   GripVertical, 
@@ -22,7 +22,8 @@ import {
   CheckSquare,
   ChevronDown,
   Calendar,
-  Clock
+  Clock,
+  Paperclip
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TemplateSection, TemplateSectionType } from "@/types";
@@ -46,6 +47,7 @@ const TYPE_ICONS: Record<TemplateSectionType, any> = {
   input_multi_select: ChevronDown,
   input_date_picker: Calendar,
   input_date_time: Clock,
+  input_file: Paperclip,
 };
 
 interface EditorBlockProps {
@@ -57,14 +59,15 @@ interface EditorBlockProps {
   onUpdate?: (updates: Partial<TemplateSection>) => void;
 }
 
-export const EditorBlock: React.FC<EditorBlockProps> = ({ 
-  section, 
-  isSelected, 
+export const EditorBlock: React.FC<EditorBlockProps> = ({
+  section,
+  isSelected,
   isStructureView,
-  onSelect, 
+  onSelect,
   onDelete,
   onUpdate
 }) => {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const Icon = TYPE_ICONS[section.type] || Type;
 
   if (isStructureView) {
@@ -210,6 +213,36 @@ export const EditorBlock: React.FC<EditorBlockProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+        );
+      case "input_file":
+        return (
+          <div className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700">{section.title || "File Upload"}</span>
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/50 px-4 py-3 text-sm italic text-slate-400 hover:border-blue-300 hover:bg-blue-50/30 hover:text-blue-400 transition-colors">
+              <Paperclip className="h-4 w-4 shrink-0" />
+              <span>{section.placeholder || "Click to upload a file"}</span>
+              <input
+                type="file"
+                className="hidden"
+                accept={section.config?.accept || undefined}
+                multiple={section.config?.multiple ?? false}
+                onChange={(e) => setSelectedFiles(Array.from(e.target.files ?? []))}
+              />
+            </label>
+            {selectedFiles.length > 0 && (
+              <ul className="space-y-1">
+                {selectedFiles.map((file, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs text-slate-600">
+                    <Paperclip className="h-3 w-3 shrink-0 text-slate-400" />
+                    <span className="truncate">{file.name}</span>
+                    <span className="ml-auto shrink-0 text-slate-400">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         );
       case "separator":

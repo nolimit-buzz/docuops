@@ -217,6 +217,29 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         />
                       </div>
                     )}
+
+                    {section.type === "input_file" && (
+                      <div className="space-y-3">
+                        <div>
+                          <Input
+                            label="Accepted File Types"
+                            placeholder="e.g. .pdf,.docx,image/*"
+                            value={section.config?.accept || ""}
+                            onChange={(e) => onUpdate({ config: { ...section.config, accept: e.target.value } })}
+                          />
+                          <p className="mt-1 text-[11px] text-slate-400">Comma-separated MIME types or extensions</p>
+                        </div>
+                        <label className="flex cursor-pointer items-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="rounded border-slate-300 text-blue-600"
+                            checked={section.config?.multiple ?? false}
+                            onChange={(e) => onUpdate({ config: { ...section.config, multiple: e.target.checked } })}
+                          />
+                          <span className="text-sm text-slate-700">Allow multiple files</span>
+                        </label>
+                      </div>
+                    )}
                   </div>
                 )}
 
