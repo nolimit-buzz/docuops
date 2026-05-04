@@ -2,37 +2,45 @@ import { DocumentSection, DocumentTemplate, DocumentTemplateField, Template, Tem
 
 export const mapApiTemplateToLocal = (apiTemplate: DocumentTemplate): Template => {
   const allFields = Array.isArray(apiTemplate.fields) ? apiTemplate.fields : [];
-  const formFields = allFields
-    .filter((f) => f.type.startsWith("input_"))
-    .map((field, index) => mapApiFieldToSection(field, index));
-  const documentStructure: DocumentSection[] = allFields
-    .filter((f) => !f.type.startsWith("input_"))
-    .map((field, index) => ({
-      id: `s-api-struct-${index}-${Date.now()}`,
-      title: field.label,
-      systemPrompt: field.prompt || undefined,
+  const formFields = allFields.map((field, index) => mapApiFieldToSection(field, index));
+
+  let documentStructure: DocumentSection[] = [];
+  if (apiTemplate.structure) {
+    documentStructure = apiTemplate.structure.map((s, index) => ({
+      id: s.id || `s-api-struct-${index}-${Date.now()}`,
+      title: s.title || "",
+      sectionPrompt: s.sectionPrompt || undefined,
     }));
+  } else {
+    // Legacy fallback for old templates that might have mixed structure inside fields
+    documentStructure = allFields
+      .filter((f) => f.type && !f.type.startsWith("input_"))
+      .map((field, index) => ({
+        id: field.id || `s-api-struct-legacy-${index}-${Date.now()}`,
+        title: field.title || field.label || "",
+        sectionPrompt: field.prompt || undefined,
+      }));
+  }
 
   return {
     id: apiTemplate.id || "",
-    name: apiTemplate.title || "Untitled",
+    name: apiTemplate.name || apiTemplate.title || "Untitled",
     description: apiTemplate.description,
     category: apiTemplate.category,
+    prompt: apiTemplate.prompt,
     createdBy: apiTemplate.company,
     updatedAt: apiTemplate.updatedAt,
-    isDraft: false,
+    isDraft: apiTemplate.status === "draft",
     documentStructure,
     formFields,
   };
 };
 
 export const mapApiFieldToSection = (field: DocumentTemplateField, index: number): TemplateSection => {
-  const isInput = field.type.startsWith("input_");
-  
   const section: TemplateSection = {
-    id: `s-api-${index}-${Date.now()}`,
+    id: field.id || `s-api-${index}-${Date.now()}`,
     type: field.type,
-    title: field.label,
+    title: field.title || field.label || "",
     systemPrompt: field.prompt || "",
     required: field.required,
     placeholder: field.placeholder || undefined,
@@ -49,37 +57,42 @@ export const mapApiFieldToSection = (field: DocumentTemplateField, index: number
     section.config = { ...section.config, rows: field.rows };
   }
 
+  if (field.accept) {
+    section.config = { ...section.config, accept: field.accept };
+  }
+
+  if (field.multiple != null) {
+    section.config = { ...section.config, multiple: field.multiple };
+  }
+
   return section;
 };
 
-export const mapLocalTemplateToApiPayload = (t: Template) => {
-  const formFieldPayload = (t.formFields ?? []).map((s) => {
-    const base: any = {
-      label: s.title,
-      type: s.type,
-      prompt: s.systemPrompt || null,
-      required: s.required,
-      placeholder: s.placeholder ?? null,
-    };
-    if (s.type === "input_textarea") base.rows = s.config?.rows ?? null;
-    if (s.type === "input_number") {
-      base.min = s.config?.min ?? null;
-      base.max = s.config?.max ?? null;
-    }
-    if (["input_dropdown", "input_single_select", "input_multi_select"].includes(s.type)) {
-      base.options = s.options ?? [];
-    }
-    return base;
-  });
+export const mapLocalTemplateToApiPayload = (
+  t: Template,
+  status: "published" | "draft" = "published"
+) => {
+  const documentStructurePayload = (t.documentStructure ?? []).map((s) => ({
+    id: s.id,
+    title: s.title,
+    sectionPrompt: s.sectionPrompt ?? "",
+  }));
 
   return {
-    title: t.name,
-    category: t.category,
-    description: t.description,
-    status: "active",
-    documentStructure: t.documentStructure ?? [],
-    formFields: t.formFields ?? [],
-    // combined fields array kept for future API integration
-    fields: formFieldPayload,
+    status,
+    name: t.name,
+    category: t.category ?? "",
+    description: t.description ?? "",
+    prompt: t.prompt ?? "",
+    structure: documentStructurePayload,
+    fields: (t.formFields ?? []).map(({ systemPrompt, config, ...rest }) => ({
+      ...rest,
+      title: rest.title || "Untitled Field",
+      prompt: systemPrompt ?? "",
+      heading_level: config?.level,
+      rows: config?.rows,
+      accept: config?.accept,
+      multiple: config?.multiple,
+    })),
   };
 };

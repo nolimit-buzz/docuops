@@ -53,8 +53,9 @@ export type TemplateSectionType =
   | 'input_dropdown' 
   | 'input_single_select' 
   | 'input_multi_select' 
-  | 'input_date_picker' 
-  | 'input_date_time';
+  | 'input_date_picker'
+  | 'input_date_time'
+  | 'input_file';
 
 export interface TemplateSection {
   id: string;
@@ -74,7 +75,7 @@ export interface DocumentSection {
   id: string;
   title: string;
   description?: string;
-  systemPrompt?: string;
+  sectionPrompt?: string;
 }
 
 export interface Template {
@@ -88,18 +89,23 @@ export interface Template {
   createdBy: string;
   updatedAt: string;
   isDraft?: boolean;
+  prompt?: string;
 }
 
 export interface DocumentTemplateField {
-  label: string;
+  id?: string;
+  title?: string;
+  label?: string;
   type: TemplateSectionType;
-  prompt: string | null;
+  prompt?: string | null;
   required: boolean;
   placeholder?: string | null;
   field_content?: string;
   heading_level?: string;
   options?: string[];
   rows?: number | null;
+  accept?: string | null;
+  multiple?: boolean | null;
 }
 
 export interface DocumentTemplate {
@@ -107,9 +113,12 @@ export interface DocumentTemplate {
   createdAt: string;
   updatedAt: string;
   company: string;
-  title: string;
+  name: string;
+  title?: string;
   category: string;
   description: string;
+  prompt?: string;
+  structure?: Array<{ id: string; title: string; sectionPrompt: string }>;
   fields: DocumentTemplateField[];
   status?: string;
 }

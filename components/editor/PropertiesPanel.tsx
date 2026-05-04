@@ -97,8 +97,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     className="w-full rounded-lg border border-blue-100 bg-white p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/10 font-mono"
                     rows={4}
                     placeholder="Tell the AI how to generate content for this section..."
-                    value={documentSection.systemPrompt || ""}
-                    onChange={(e) => onUpdateDocumentSection({ systemPrompt: e.target.value })}
+                    value={documentSection.sectionPrompt || ""}
+                    onChange={(e) => onUpdateDocumentSection({ sectionPrompt: e.target.value })}
                   />
                 </div>
               </>
@@ -215,6 +215,29 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           value={section.config?.max || ""}
                           onChange={(e) => onUpdate({ config: { ...section.config, max: e.target.value } })}
                         />
+                      </div>
+                    )}
+
+                    {section.type === "input_file" && (
+                      <div className="space-y-3">
+                        <div>
+                          <Input
+                            label="Accepted File Types"
+                            placeholder="e.g. .pdf,.docx,image/*"
+                            value={section.config?.accept || ""}
+                            onChange={(e) => onUpdate({ config: { ...section.config, accept: e.target.value } })}
+                          />
+                          <p className="mt-1 text-[11px] text-slate-400">Comma-separated MIME types or extensions</p>
+                        </div>
+                        <label className="flex cursor-pointer items-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="rounded border-slate-300 text-blue-600"
+                            checked={section.config?.multiple ?? false}
+                            onChange={(e) => onUpdate({ config: { ...section.config, multiple: e.target.checked } })}
+                          />
+                          <span className="text-sm text-slate-700">Allow multiple files</span>
+                        </label>
                       </div>
                     )}
                   </div>

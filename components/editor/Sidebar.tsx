@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Calendar,
   Clock,
+  Paperclip,
   Search,
   Settings,
   Library,
@@ -31,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "../ui/Input";
 import { DocumentSection, Template } from "@/types";
 
-export type SidebarTab = "form" | "sections" | "settings";
+export type SidebarTab = "form" | "prompt" | "sections" | "settings";
 
 interface TabBarProps {
   activeTab: SidebarTab;
@@ -44,6 +45,12 @@ const TAB_META = [
     label: "Form Fields",
     description: "Adding custom input fields",
     icon: Library,
+  },
+  {
+    id: "prompt" as SidebarTab,
+    label: "Template Prompt",
+    description: "AI generation instructions for this template",
+    icon: LayoutList,
   },
   {
     id: "sections" as SidebarTab,
@@ -156,6 +163,7 @@ const ELEMENT_CATEGORIES = [
       { type: "input_multi_select", label: "Input Multi-Select", icon: ChevronDown },
       { type: "input_date_picker", label: "Input Date Picker", icon: Calendar },
       { type: "input_date_time", label: "Input Date & Time", icon: Clock },
+      { type: "input_file", label: "File Upload", icon: Paperclip },
     ],
   },
 ];

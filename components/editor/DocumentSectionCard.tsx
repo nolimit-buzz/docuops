@@ -50,9 +50,9 @@ export const DocumentSectionCard: React.FC<DocumentSectionCardProps> = ({
         {section.description && (
           <p className="mt-0.5 text-xs text-slate-400 line-clamp-2">{section.description}</p>
         )}
-        {section.systemPrompt && (
+        {section.sectionPrompt && (
           <p className="mt-1.5 text-[10px] font-mono text-slate-400 italic truncate">
-            AI: {section.systemPrompt}
+            AI: {section.sectionPrompt}
           </p>
         )}
       </div>

@@ -74,11 +74,18 @@ export const Templates: React.FC = () => {
       deleteTemplate(pendingDeleteId);
       toast.success("Template deleted");
       setPendingDeleteId(null);
-    } catch {
-      const count = documents.filter((d) => d.templateId === pendingDeleteId).length;
-      setPendingDeleteId(null);
-      setBlockedDocCount(count);
-      setShowBlockedModal(true);
+    } catch (err: any) {
+      const msg: string = err?.message ?? "";
+      if (msg.toLowerCase().includes("not found")) {
+        deleteTemplate(pendingDeleteId);
+        toast.success("Template deleted");
+        setPendingDeleteId(null);
+      } else {
+        const count = documents.filter((d) => d.templateId === pendingDeleteId).length;
+        setPendingDeleteId(null);
+        setBlockedDocCount(count);
+        setShowBlockedModal(true);
+      }
     } finally {
       setDeleteLoading(false);
     }
