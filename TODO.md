@@ -6,6 +6,15 @@
 - [ ] Final UI/UX polish on the template builder sidebar and progress indicators
 - [ ] Cleanup: Remove debug payload logging from browser and server consoles
 
+## ✅ Completed (May 4, 2026)
+- [x] Fixed 500 Internal Server Error on template publish by ensuring the `title` property is always present in fields
+- [x] Preserved backend field IDs when mapping API fields to local sections to prevent unnecessary field recreation
+- [x] Corrected mapping of `systemPrompt` back to `prompt` in outgoing API payload
+- [x] Flattened `config` properties to the root of the field payload for backend ingestion
+- [x] Fixed issue where Document Structure tab data disappeared on save/refresh by properly reading `apiTemplate.structure`
+- [x] Added detailed console logging for template payloads to aid in debugging
+- [x] Refactored `COMPANY_STATS` endpoint configuration to drop the `userId` requirement and updated hook usages
+
 ## ✅ Completed (May 1, 2026)
 - [x] Separate Template Document Structure from Form Fields — `documentStructure` and `formFields` are now independent; store migration v2 handles legacy data
 
