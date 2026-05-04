@@ -23,10 +23,13 @@ export interface CompanyStats {
   }>;
 }
 
-export async function getCompanyStats(userId: string): Promise<CompanyStats | null> {
+export async function getCompanyStats(): Promise<CompanyStats | null> {
   try {
-    return await apiJson<CompanyStats>(ENDPOINTS.COMPANY_STATS.GET(userId));
-  } catch {
+    const data = await apiJson<CompanyStats>(ENDPOINTS.COMPANY_STATS.GET);
+    console.log("[Server] company_stats raw response:", JSON.stringify(data, null, 2));
+    return data;
+  } catch (err) {
+    console.error("[Server] company_stats fetch failed:", err);
     return null;
   }
 }

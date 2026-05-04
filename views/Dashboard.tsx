@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { IntakeModal } from "../components/IntakeModal";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -19,16 +19,23 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const userId = user.id;
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!userId || userId === "u-1") {
       setLoading(false);
       return;
     }
-    getCompanyStats(userId)
-      .then(setStatsData)
-      .catch((err) => console.error("Failed to load company stats:", err))
+    setLoading(true);
+    console.log("[Dashboard] Fetching company stats — user:", userId, "path:", pathname);
+    getCompanyStats()
+      .then((data) => {
+        console.log("[Dashboard] Company stats received:", JSON.stringify(data, null, 2));
+        setStatsData(data);
+      })
+      .catch((err) => console.error("[Dashboard] Failed to load company stats:", err))
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, pathname]);
 
   return (
     <div className="mx-auto max-w-7xl p-8">

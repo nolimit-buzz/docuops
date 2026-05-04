@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "../ui/Input";
 import { DocumentSection, Template } from "@/types";
 
-export type SidebarTab = "form" | "sections" | "settings";
+export type SidebarTab = "form" | "prompt" | "sections" | "settings";
 
 interface TabBarProps {
   activeTab: SidebarTab;
@@ -45,6 +45,12 @@ const TAB_META = [
     label: "Form Fields",
     description: "Adding custom input fields",
     icon: Library,
+  },
+  {
+    id: "prompt" as SidebarTab,
+    label: "Template Prompt",
+    description: "AI generation instructions for this template",
+    icon: LayoutList,
   },
   {
     id: "sections" as SidebarTab,

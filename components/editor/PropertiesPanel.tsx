@@ -97,8 +97,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     className="w-full rounded-lg border border-blue-100 bg-white p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/10 font-mono"
                     rows={4}
                     placeholder="Tell the AI how to generate content for this section..."
-                    value={documentSection.systemPrompt || ""}
-                    onChange={(e) => onUpdateDocumentSection({ systemPrompt: e.target.value })}
+                    value={documentSection.sectionPrompt || ""}
+                    onChange={(e) => onUpdateDocumentSection({ sectionPrompt: e.target.value })}
                   />
                 </div>
               </>

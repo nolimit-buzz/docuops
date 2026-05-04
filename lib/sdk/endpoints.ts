@@ -106,7 +106,7 @@ export const ENDPOINTS = {
     DELETE: (id: string) => `/payload-migrations/${id}`,
   },
   COMPANY_STATS: {
-    GET: (userId: string) => `/company_stats/${userId}`,
+    GET: '/company_stats',
   },
   PAPER_TYPES: {
     LIST: '/paper_types',

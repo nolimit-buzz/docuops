@@ -75,7 +75,7 @@ export interface DocumentSection {
   id: string;
   title: string;
   description?: string;
-  systemPrompt?: string;
+  sectionPrompt?: string;
 }
 
 export interface Template {
@@ -89,12 +89,15 @@ export interface Template {
   createdBy: string;
   updatedAt: string;
   isDraft?: boolean;
+  prompt?: string;
 }
 
 export interface DocumentTemplateField {
-  label: string;
+  id?: string;
+  title?: string;
+  label?: string;
   type: TemplateSectionType;
-  prompt: string | null;
+  prompt?: string | null;
   required: boolean;
   placeholder?: string | null;
   field_content?: string;
@@ -110,9 +113,12 @@ export interface DocumentTemplate {
   createdAt: string;
   updatedAt: string;
   company: string;
-  title: string;
+  name: string;
+  title?: string;
   category: string;
   description: string;
+  prompt?: string;
+  structure?: Array<{ id: string; title: string; sectionPrompt: string }>;
   fields: DocumentTemplateField[];
   status?: string;
 }

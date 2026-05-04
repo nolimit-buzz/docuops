@@ -20,7 +20,7 @@ export const TemplateEditor: React.FC = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
-  const { templates, documents, updateTemplate, addTemplate, deleteTemplate, setTemplates, organization } = useStore();
+  const { templates, documents, updateTemplate, addTemplate, deleteTemplate, setTemplates } = useStore();
   
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,10 +79,47 @@ export const TemplateEditor: React.FC = () => {
       isDraft: true,
       updatedAt: new Date().toISOString(),
     };
-    
-    updateTemplate(updatedTemplate);
-    setTemplate(updatedTemplate);
-    toast.success("Draft saved successfully");
+
+    const payload = mapLocalTemplateToApiPayload(updatedTemplate, "draft");
+
+    console.log("\n" + "=".repeat(50));
+    console.log("[DocuOps] TEMPLATE SAVE PAYLOAD (BROWSER)");
+    console.log("=".repeat(50));
+    console.log(JSON.stringify(payload, null, 2));
+    console.log("=".repeat(50) + "\n");
+
+    setIsLoading(true);
+    try {
+      const isNew = updatedTemplate.id.startsWith("t-");
+      let saved: Template;
+
+      if (isNew) {
+        const result = await createDocumentTemplate(payload);
+        saved = mapApiTemplateToLocal(result);
+        deleteTemplate(updatedTemplate.id);
+        addTemplate(saved);
+        setTemplate(saved);
+        router.replace(`/templates/${saved.id}`);
+      } else {
+        const result = await updateDocumentTemplate(updatedTemplate.id, payload);
+        saved = mapApiTemplateToLocal(result);
+        updateTemplate(saved);
+        setTemplate(saved);
+      }
+
+      await fetch("/api/log-payload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      toast.success("Draft saved successfully");
+    } catch (err) {
+      console.error("Failed to save template:", err);
+      toast.error("Failed to save template");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePublish = async () => {
@@ -91,38 +128,43 @@ export const TemplateEditor: React.FC = () => {
       return;
     }
 
+    const payload = mapLocalTemplateToApiPayload(template, "published");
+
+    console.log("\n" + "=".repeat(50));
+    console.log("[DocuOps] TEMPLATE PUBLISH PAYLOAD (BROWSER)");
+    console.log("=".repeat(50));
+    console.log(JSON.stringify(payload, null, 2));
+    console.log("=".repeat(50) + "\n");
+
     setIsLoading(true);
     try {
-      const payload = mapLocalTemplateToApiPayload(template);
+      const isNew = template.id.startsWith("t-");
+      let saved: Template;
 
-      // --- API publish temporarily disabled while new payload shape is validated ---
-      // await createDocumentTemplate(...) / updateDocumentTemplate(...)
-      // -----------------------------------------------------------------------------
+      if (isNew) {
+        const result = await createDocumentTemplate(payload);
+        saved = mapApiTemplateToLocal(result);
+        deleteTemplate(template.id);
+        addTemplate(saved);
+        setTemplate(saved);
+        router.replace(`/templates/${saved.id}`);
+      } else {
+        const result = await updateDocumentTemplate(template.id, payload);
+        saved = mapApiTemplateToLocal(result);
+        updateTemplate(saved);
+        setTemplate(saved);
+      }
 
-      // Browser console
-      console.log("\n" + "=".repeat(50));
-      console.log("[DocuOps] TEMPLATE PUBLISH PAYLOAD (BROWSER)");
-      console.log("=".repeat(50));
-      console.log(JSON.stringify(payload, null, 2));
-      console.log("=".repeat(50) + "\n");
-
-      // Server console via log-payload route
       await fetch("/api/log-payload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "template_publish",
-          templateId: template.id,
-          templateName: template.name,
-          documentStructure: payload.documentStructure,
-          formFields: payload.formFields,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      toast.success("Payload logged — check browser & server consoles");
+      toast.success("Template published successfully");
     } catch (err) {
-      console.error("Failed to log payload:", err);
-      toast.error("Failed to log payload");
+      console.error("Failed to publish template:", err);
+      toast.error("Failed to publish template");
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +197,11 @@ export const TemplateEditor: React.FC = () => {
       router.push("/templates");
     } catch (err: any) {
       const msg: string = err?.message ?? "";
-      if (msg.toLowerCase().includes("templateid") || msg.toLowerCase().includes("not-null")) {
+      if (msg.toLowerCase().includes("not found")) {
+        deleteTemplate(template.id);
+        toast.success("Template deleted");
+        router.push("/templates");
+      } else if (msg.toLowerCase().includes("templateid") || msg.toLowerCase().includes("not-null")) {
         setShowBlockedModal(true);
       } else {
         toast.error("Failed to delete template");
@@ -249,6 +295,12 @@ export const TemplateEditor: React.FC = () => {
     if (syncToStore) updateTemplate(updated);
   };
 
+  const updateTemplatePrompt = (value: string) => {
+    const updated = { ...template, prompt: value };
+    setTemplate(updated);
+    updateTemplate(updated);
+  };
+
   const selectedFormField = (template.formFields ?? []).find(s => s.id === selectedSectionId) || null;
   const selectedDocSection = (template.documentStructure ?? []).find(s => s.id === selectedSectionId) || null;
 
@@ -313,15 +365,17 @@ export const TemplateEditor: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Side Panel (Toolbox) */}
-        <SidebarPanel
-          activeTab={activeTab}
-          template={template}
-          selectedSectionId={selectedSectionId}
-          onUpdateTemplate={(updates) => setTemplate({ ...template, ...updates })}
-          onAddElement={addFormField}
-          onSelectSection={setSelectedSectionId}
-          onAddSection={addDocumentSection}
-        />
+        {activeTab !== "prompt" && (
+          <SidebarPanel
+            activeTab={activeTab}
+            template={template}
+            selectedSectionId={selectedSectionId}
+            onUpdateTemplate={(updates) => setTemplate({ ...template, ...updates })}
+            onAddElement={addFormField}
+            onSelectSection={setSelectedSectionId}
+            onAddSection={addDocumentSection}
+          />
+        )}
 
         {/* Canvas (Center) */}
         <main 
@@ -329,7 +383,30 @@ export const TemplateEditor: React.FC = () => {
           onClick={() => setSelectedSectionId(null)}
         >
           <div className="mx-auto max-w-2xl space-y-6">
-            {activeTab === "sections" ? (
+            {activeTab === "prompt" ? (
+              <div className="flex flex-col" style={{ minHeight: "60vh" }}>
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold text-slate-900">Template Prompt</h2>
+                  <p className="text-sm text-slate-500">
+                    Write instructions for the AI to follow when generating document sections
+                    from this template's form fields and document structure.
+                  </p>
+                </div>
+                <textarea
+                  className="flex-1 w-full resize-none rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                  rows={16}
+                  placeholder="e.g. Generate a professional NDA agreement using the company names, effective date, and confidentiality terms provided in the form fields. Structure the document using the sections defined in the document structure..."
+                  value={template.prompt ?? ""}
+                  onChange={(e) => updateTemplatePrompt(e.target.value)}
+                />
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-xs text-slate-400">
+                    {(template.prompt ?? "").length} characters
+                  </p>
+                  <Button size="sm" onClick={handleSave}>Save Prompt</Button>
+                </div>
+              </div>
+            ) : activeTab === "sections" ? (
               <>
                 {(template.documentStructure ?? []).length > 0 ? (
                   (template.documentStructure ?? []).map((section, index) => (
@@ -386,7 +463,7 @@ export const TemplateEditor: React.FC = () => {
         {/* Right Side Panel (Properties) */}
         <div className={cn(
           "transition-all duration-300 ease-in-out shrink-0 overflow-hidden border-l border-slate-200 bg-white",
-          selectedSectionId ? "w-80" : "w-0"
+          selectedSectionId && activeTab !== "prompt" ? "w-80" : "w-0"
         )}>
           <PropertiesPanel
             section={selectedFormField}
